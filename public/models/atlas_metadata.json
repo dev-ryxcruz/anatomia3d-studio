@@ -1,0 +1,1955 @@
+{
+  "mandible": {
+    "center": [
+      -0.002,
+      2.132,
+      0.083
+    ],
+    "min": [
+      -0.13,
+      2.029,
+      -0.025
+    ],
+    "max": [
+      0.127,
+      2.234,
+      0.19
+    ],
+    "subMeshes": [
+      {
+        "id": "mandible_lower_teeth",
+        "name": "Arcada Dentária Inferior",
+        "latinName": "Arcus dentalis inferior",
+        "structureId": "mandible",
+        "center": [
+          -0.002,
+          2.086,
+          0.127
+        ],
+        "vertexCount": 6940,
+        "triangleCount": 13750
+      },
+      {
+        "id": "mandible_bone",
+        "name": "Corpo e Ramos da Mandíbula",
+        "latinName": "Mandibula",
+        "structureId": "mandible",
+        "center": [
+          -0.002,
+          2.132,
+          0.077
+        ],
+        "vertexCount": 1207,
+        "triangleCount": 2348
+      }
+    ]
+  },
+  "cranium": {
+    "center": [
+      -0.002,
+      2.325,
+      -0.033
+    ],
+    "min": [
+      -0.184,
+      2.102,
+      -0.286
+    ],
+    "max": [
+      0.181,
+      2.549,
+      0.22
+    ],
+    "subMeshes": [
+      {
+        "id": "cranium_upper_teeth",
+        "name": "Arcada Dentária Superior",
+        "latinName": "Arcus dentalis superior",
+        "structureId": "cranium",
+        "center": [
+          -0.002,
+          2.142,
+          0.143
+        ],
+        "vertexCount": 8048,
+        "triangleCount": 15808
+      },
+      {
+        "id": "cranium_sphenoid_ethmoid",
+        "name": "Ossos Esfenoide e Etmoide (Base do Crânio)",
+        "latinName": "Os sphenoidale et Os ethmoidale",
+        "structureId": "cranium",
+        "center": [
+          -0.002,
+          2.252,
+          0.07
+        ],
+        "vertexCount": 8125,
+        "triangleCount": 12856
+      },
+      {
+        "id": "cranium_frontal",
+        "name": "Osso Frontal",
+        "latinName": "Os frontale",
+        "structureId": "cranium",
+        "center": [
+          -0.002,
+          2.401,
+          0.102
+        ],
+        "vertexCount": 3315,
+        "triangleCount": 5112
+      },
+      {
+        "id": "cranium_viscerocranium",
+        "name": "Maxilas, Zigomáticos e Ossos da Face",
+        "latinName": "Viscerocranium (Maxilla, Os zygomaticum, Os nasale)",
+        "structureId": "cranium",
+        "center": [
+          -0.002,
+          2.22,
+          0.114
+        ],
+        "vertexCount": 9996,
+        "triangleCount": 14918
+      },
+      {
+        "id": "cranium_parietal_left",
+        "name": "Osso Parietal Esquerdo",
+        "latinName": "Os parietale",
+        "structureId": "cranium",
+        "center": [
+          0.081,
+          2.405,
+          -0.101
+        ],
+        "vertexCount": 2927,
+        "triangleCount": 3732
+      },
+      {
+        "id": "cranium_temporal_left",
+        "name": "Osso Temporal Esquerdo",
+        "latinName": "Os temporale",
+        "structureId": "cranium",
+        "center": [
+          0.102,
+          2.252,
+          -0.038
+        ],
+        "vertexCount": 1835,
+        "triangleCount": 2828
+      },
+      {
+        "id": "cranium_occipital",
+        "name": "Osso Occipital",
+        "latinName": "Os occipitale",
+        "structureId": "cranium",
+        "center": [
+          -0.002,
+          2.294,
+          -0.142
+        ],
+        "vertexCount": 2938,
+        "triangleCount": 4912
+      },
+      {
+        "id": "cranium_parietal_right",
+        "name": "Osso Parietal Direito",
+        "latinName": "Os parietale",
+        "structureId": "cranium",
+        "center": [
+          -0.086,
+          2.405,
+          -0.105
+        ],
+        "vertexCount": 2734,
+        "triangleCount": 3694
+      },
+      {
+        "id": "cranium_temporal_right",
+        "name": "Osso Temporal Direito",
+        "latinName": "Os temporale",
+        "structureId": "cranium",
+        "center": [
+          -0.105,
+          2.252,
+          -0.038
+        ],
+        "vertexCount": 1976,
+        "triangleCount": 2906
+      }
+    ]
+  },
+  "brainstem_spinal_cord": {
+    "center": [
+      -0.002,
+      2.243,
+      0.044
+    ],
+    "min": [
+      -0.107,
+      2.119,
+      -0.118
+    ],
+    "max": [
+      0.103,
+      2.366,
+      0.206
+    ],
+    "subMeshes": [
+      {
+        "id": "cranial_nerves",
+        "name": "Nervos Cranianos e Ópticos",
+        "latinName": "Nervi craniales",
+        "structureId": "brainstem_spinal_cord",
+        "center": [
+          -0.002,
+          2.299,
+          0.069
+        ],
+        "vertexCount": 2679,
+        "triangleCount": 6798
+      },
+      {
+        "id": "brainstem_pons_medulla",
+        "name": "Tronco Encefálico (Mesencéfalo, Ponte e Bulbo)",
+        "latinName": "Truncus encephali",
+        "structureId": "brainstem_spinal_cord",
+        "center": [
+          -0.002,
+          2.243,
+          -0.046
+        ],
+        "vertexCount": 5678,
+        "triangleCount": 13058
+      }
+    ]
+  },
+  "lower_limb_muscles": {
+    "center": [
+      0,
+      -0.346,
+      0.003
+    ],
+    "min": [
+      -0.724,
+      -1.582,
+      -0.29
+    ],
+    "max": [
+      0.724,
+      0.89,
+      0.296
+    ],
+    "subMeshes": [
+      {
+        "id": "calf_gastrocnemius_soleus",
+        "name": "Tríceps Sural (Gastrocnêmio e Sóleo)",
+        "latinName": "Musculus triceps surae (Gastrocnemius et Soleus)",
+        "structureId": "lower_limb_muscles",
+        "center": [
+          0,
+          -0.946,
+          0.034
+        ],
+        "vertexCount": 3668,
+        "triangleCount": 8298
+      },
+      {
+        "id": "thigh_quadriceps_hamstrings",
+        "name": "Quadríceps Femoral, Sartório, Adutores e Isquiotibiais",
+        "latinName": "Musculus quadriceps femoris, Adductores et Ischiocrurales",
+        "structureId": "lower_limb_muscles",
+        "center": [
+          0,
+          -0.4,
+          -0.004
+        ],
+        "vertexCount": 5128,
+        "triangleCount": 14024
+      },
+      {
+        "id": "leg_compartment_muscles",
+        "name": "Músculos Tibiais, Fibulares e Trato Iliotibial",
+        "latinName": "Musculi cruris et Tractus iliotibialis",
+        "structureId": "lower_limb_muscles",
+        "center": [
+          0,
+          -0.336,
+          -0.022
+        ],
+        "vertexCount": 1728,
+        "triangleCount": 5232
+      },
+      {
+        "id": "gluteal_pelvic_muscles",
+        "name": "Músculos Glúteos (Máximo, Médio, Mínimo) e Pelvitrocantéricos",
+        "latinName": "Musculi glutei et pelvitrochanterici",
+        "structureId": "lower_limb_muscles",
+        "center": [
+          0,
+          0.548,
+          -0.134
+        ],
+        "vertexCount": 5212,
+        "triangleCount": 10976
+      }
+    ]
+  },
+  "biceps_brachii": {
+    "center": [
+      0,
+      0.124,
+      0.053
+    ],
+    "min": [
+      -0.739,
+      -1.582,
+      -0.197
+    ],
+    "max": [
+      0.739,
+      1.83,
+      0.303
+    ],
+    "subMeshes": [
+      {
+        "id": "forearm_muscles",
+        "name": "Músculos Flexores, Extensores e Pronadores do Antebraço",
+        "latinName": "Musculi antebrachii",
+        "structureId": "biceps_brachii",
+        "center": [
+          0,
+          -0.11,
+          0.087
+        ],
+        "vertexCount": 1852,
+        "triangleCount": 7848
+      },
+      {
+        "id": "triceps_brachii",
+        "name": "Músculo Tríceps Braquial (Cabeças Longa, Lateral e Medial)",
+        "latinName": "Musculus triceps brachii",
+        "structureId": "biceps_brachii",
+        "center": [
+          0,
+          1.408,
+          -0.132
+        ],
+        "vertexCount": 2975,
+        "triangleCount": 3536
+      },
+      {
+        "id": "biceps_right",
+        "name": "Bíceps Braquial e Braquial Direitos",
+        "latinName": "Musculus biceps brachii et Musculus brachialis",
+        "structureId": "biceps_brachii",
+        "center": [
+          -0.442,
+          1.413,
+          -0.036
+        ],
+        "vertexCount": 2460,
+        "triangleCount": 2288
+      },
+      {
+        "id": "biceps_left",
+        "name": "Bíceps Braquial e Braquial Esquerdos",
+        "latinName": "Musculus biceps brachii et Musculus brachialis",
+        "structureId": "biceps_brachii",
+        "center": [
+          0.442,
+          1.413,
+          -0.036
+        ],
+        "vertexCount": 2431,
+        "triangleCount": 2286
+      }
+    ]
+  },
+  "diaphragm_abdominal": {
+    "center": [
+      0,
+      0.943,
+      0.054
+    ],
+    "min": [
+      -0.34,
+      0.367,
+      -0.179
+    ],
+    "max": [
+      0.34,
+      1.519,
+      0.287
+    ],
+    "subMeshes": [
+      {
+        "id": "abdominal_wall_muscles",
+        "name": "Músculos Reto Abdominal, Oblíquos e Iliopsoas",
+        "latinName": "Musculi abdominis et Musculus iliopsoas",
+        "structureId": "diaphragm_abdominal",
+        "center": [
+          0,
+          0.943,
+          0.067
+        ],
+        "vertexCount": 10056,
+        "triangleCount": 25322
+      },
+      {
+        "id": "diaphragm_dome",
+        "name": "Diafragma Toracoabdominal",
+        "latinName": "Diaphragma",
+        "structureId": "diaphragm_abdominal",
+        "center": [
+          -0.002,
+          1.225,
+          0.038
+        ],
+        "vertexCount": 8469,
+        "triangleCount": 15074
+      }
+    ]
+  },
+  "pectoralis_major": {
+    "center": [
+      0,
+      1.526,
+      0.017
+    ],
+    "min": [
+      -0.47,
+      1.199,
+      -0.255
+    ],
+    "max": [
+      0.47,
+      1.852,
+      0.289
+    ],
+    "subMeshes": [
+      {
+        "id": "pectoralis_major_right",
+        "name": "Músculo Peitoral Maior Direito",
+        "latinName": "Musculus pectoralis major",
+        "structureId": "pectoralis_major",
+        "center": [
+          -0.241,
+          1.542,
+          0.121
+        ],
+        "vertexCount": 4758,
+        "triangleCount": 5204
+      },
+      {
+        "id": "pectoralis_major_left",
+        "name": "Músculo Peitoral Maior Esquerdo",
+        "latinName": "Musculus pectoralis major",
+        "structureId": "pectoralis_major",
+        "center": [
+          0.241,
+          1.542,
+          0.121
+        ],
+        "vertexCount": 4757,
+        "triangleCount": 5210
+      },
+      {
+        "id": "pectoralis_minor_serratus",
+        "name": "Músculos Peitoral Menor e Serrátil Anterior",
+        "latinName": "Musculus pectoralis minor et Musculus serratus anterior",
+        "structureId": "pectoralis_major",
+        "center": [
+          0,
+          1.526,
+          -0.04
+        ],
+        "vertexCount": 8593,
+        "triangleCount": 18052
+      }
+    ]
+  },
+  "deltoid": {
+    "center": [
+      0,
+      1.666,
+      -0.1
+    ],
+    "min": [
+      -0.55,
+      1.463,
+      -0.251
+    ],
+    "max": [
+      0.55,
+      1.869,
+      0.052
+    ],
+    "subMeshes": [
+      {
+        "id": "deltoid_right",
+        "name": "Músculo Deltoide Direito (Clavicular, Acromial e Espinhal)",
+        "latinName": "Musculus deltoideus",
+        "structureId": "deltoid",
+        "center": [
+          -0.376,
+          1.666,
+          -0.092
+        ],
+        "vertexCount": 3729,
+        "triangleCount": 3200
+      },
+      {
+        "id": "deltoid_left",
+        "name": "Músculo Deltoide Esquerdo (Clavicular, Acromial e Espinhal)",
+        "latinName": "Musculus deltoideus",
+        "structureId": "deltoid",
+        "center": [
+          0.376,
+          1.666,
+          -0.092
+        ],
+        "vertexCount": 3765,
+        "triangleCount": 3232
+      },
+      {
+        "id": "rotator_cuff_posterior",
+        "name": "Manguito Rotador Posterior (Supraespinhal, Infraespinhal e Redondos)",
+        "latinName": "Musculi supraspinatus, infraspinatus et teres",
+        "structureId": "deltoid",
+        "center": [
+          0,
+          1.653,
+          -0.135
+        ],
+        "vertexCount": 4468,
+        "triangleCount": 4332
+      },
+      {
+        "id": "rotator_cuff_subscapularis",
+        "name": "Músculo Subescapular (Manguito Rotador)",
+        "latinName": "Musculus subscapularis",
+        "structureId": "deltoid",
+        "center": [
+          0,
+          1.638,
+          -0.118
+        ],
+        "vertexCount": 4710,
+        "triangleCount": 3036
+      }
+    ]
+  },
+  "trapezius_dorsal": {
+    "center": [
+      0,
+      1.417,
+      -0.082
+    ],
+    "min": [
+      -0.393,
+      0.601,
+      -0.301
+    ],
+    "max": [
+      0.393,
+      2.233,
+      0.136
+    ],
+    "subMeshes": [
+      {
+        "id": "trapezius_scm",
+        "name": "Músculos Trapézio e Esternocleidomastoideo",
+        "latinName": "Musculus trapezius et Musculus sternocleidomastoideus",
+        "structureId": "trapezius_dorsal",
+        "center": [
+          0,
+          1.688,
+          -0.082
+        ],
+        "vertexCount": 3937,
+        "triangleCount": 9540
+      },
+      {
+        "id": "latissimus_erector_spinae",
+        "name": "Grande Dorsal, Romboides e Eretores da Espinha",
+        "latinName": "Musculus latissimus dorsi et Musculus erector spinae",
+        "structureId": "trapezius_dorsal",
+        "center": [
+          0,
+          1.409,
+          -0.156
+        ],
+        "vertexCount": 4021,
+        "triangleCount": 14458
+      },
+      {
+        "id": "levator_scapulae",
+        "name": "Músculo Levantador da Escápula",
+        "latinName": "Musculus levator scapulae",
+        "structureId": "trapezius_dorsal",
+        "center": [
+          0,
+          1.95,
+          -0.128
+        ],
+        "vertexCount": 2547,
+        "triangleCount": 2630
+      }
+    ]
+  },
+  "aorta": {
+    "center": [
+      0,
+      0.463,
+      -0.008
+    ],
+    "min": [
+      -0.759,
+      -1.508,
+      -0.263
+    ],
+    "max": [
+      0.759,
+      2.435,
+      0.247
+    ],
+    "subMeshes": [
+      {
+        "id": "arteries_upper_head",
+        "name": "Artérias Cervicocefálicas e do Membro Superior",
+        "latinName": "Arteriae capitis, colli et membri superioris",
+        "structureId": "aorta",
+        "center": [
+          0,
+          1.316,
+          -0.03
+        ],
+        "vertexCount": 1105,
+        "triangleCount": 2598
+      },
+      {
+        "id": "arteries_visceral_lower",
+        "name": "Ramos Viscerais Abdominais, Ilíacos e Femorotibiais",
+        "latinName": "Arteriae abdominis, pelvis et membri inferioris",
+        "structureId": "aorta",
+        "center": [
+          0,
+          -0.039,
+          0.018
+        ],
+        "vertexCount": 1287,
+        "triangleCount": 3364
+      },
+      {
+        "id": "aorta_trunk_arch",
+        "name": "Aorta Ascendente, Arco Aórtico, Aorta Torácica e Abdominal",
+        "latinName": "Aorta ascendens, Arcus aortae et Aorta descendens",
+        "structureId": "aorta",
+        "center": [
+          0.06,
+          1.358,
+          0.026
+        ],
+        "vertexCount": 1809,
+        "triangleCount": 3816
+      }
+    ]
+  },
+  "cerebrum": {
+    "center": [
+      -0.002,
+      2.366,
+      -0.049
+    ],
+    "min": [
+      -0.172,
+      2.198,
+      -0.267
+    ],
+    "max": [
+      0.169,
+      2.535,
+      0.169
+    ],
+    "subMeshes": [
+      {
+        "id": "brain_ventricles",
+        "name": "Sistema Ventricular Encefálico (Ventrículos Laterais, III e IV)",
+        "latinName": "Ventriculi encephali",
+        "structureId": "cerebrum",
+        "center": [
+          -0.002,
+          2.304,
+          -0.067
+        ],
+        "vertexCount": 6200,
+        "triangleCount": 12210
+      },
+      {
+        "id": "cerebrum_left_hemisphere",
+        "name": "Hemisfério Cerebral Esquerdo (Córtex e Substância Branca)",
+        "latinName": "Hemispherium cerebri sinistrum",
+        "structureId": "cerebrum",
+        "center": [
+          0.062,
+          2.393,
+          -0.049
+        ],
+        "vertexCount": 18737,
+        "triangleCount": 42106
+      },
+      {
+        "id": "cerebrum_right_hemisphere",
+        "name": "Hemisfério Cerebral Direito (Córtex e Substância Branca)",
+        "latinName": "Hemispherium cerebri dextrum",
+        "structureId": "cerebrum",
+        "center": [
+          -0.036,
+          2.393,
+          -0.049
+        ],
+        "vertexCount": 20507,
+        "triangleCount": 46100
+      },
+      {
+        "id": "cerebrum_deep_nuclei_callosum",
+        "name": "Corpo Caloso, Tálamo, Hipocampo e Núcleos da Base",
+        "latinName": "Corpus callosum, Diencephalon et Nuclei basales",
+        "structureId": "cerebrum",
+        "center": [
+          -0.002,
+          2.355,
+          -0.036
+        ],
+        "vertexCount": 11269,
+        "triangleCount": 23978
+      }
+    ]
+  },
+  "cerebellum": {
+    "center": [
+      -0.013,
+      2.254,
+      -0.122
+    ],
+    "min": [
+      -0.153,
+      2.188,
+      -0.228
+    ],
+    "max": [
+      0.127,
+      2.32,
+      -0.016
+    ],
+    "subMeshes": [
+      {
+        "id": "cerebellum_hemispheres",
+        "name": "Hemisférios Cerebelares e Vérmis",
+        "latinName": "Cerebellum",
+        "structureId": "cerebellum",
+        "center": [
+          -0.002,
+          2.253,
+          -0.144
+        ],
+        "vertexCount": 5506,
+        "triangleCount": 10492
+      },
+      {
+        "id": "cerebellum_tentorium",
+        "name": "Tentório do Cerebelo",
+        "latinName": "Cerebellum",
+        "structureId": "cerebellum",
+        "center": [
+          -0.079,
+          2.279,
+          -0.122
+        ],
+        "vertexCount": 2889,
+        "triangleCount": 4822
+      }
+    ]
+  },
+  "venae_cavae": {
+    "center": [
+      0,
+      0.206,
+      -0.012
+    ],
+    "min": [
+      -0.671,
+      -1.521,
+      -0.265
+    ],
+    "max": [
+      0.672,
+      1.933,
+      0.24
+    ],
+    "subMeshes": [
+      {
+        "id": "venae_portal_renal_hepatic",
+        "name": "Sistema Porta Hepático, Veias Hepáticas e Veias Renais",
+        "latinName": "Vena portae hepatis, Venae hepaticae et Venae renales",
+        "structureId": "venae_cavae",
+        "center": [
+          -0.01,
+          1.09,
+          0.059
+        ],
+        "vertexCount": 4155,
+        "triangleCount": 10466
+      },
+      {
+        "id": "venae_cavae_central",
+        "name": "Veias Cavas Superior e Inferior, Jugulares e Sistema Ázigos",
+        "latinName": "Vena cava superior, Vena cava inferior et Vena azygos",
+        "structureId": "venae_cavae",
+        "center": [
+          0.009,
+          1.412,
+          -0.03
+        ],
+        "vertexCount": 5205,
+        "triangleCount": 9788
+      },
+      {
+        "id": "venae_limbs",
+        "name": "Rede Venosa Superficial e Profunda dos Membros",
+        "latinName": "Venae membri superioris et inferioris",
+        "structureId": "venae_cavae",
+        "center": [
+          0,
+          0.137,
+          -0.067
+        ],
+        "vertexCount": 1512,
+        "triangleCount": 4500
+      }
+    ]
+  },
+  "liver": {
+    "center": [
+      -0.025,
+      1.254,
+      0.055
+    ],
+    "min": [
+      -0.279,
+      1.056,
+      -0.137
+    ],
+    "max": [
+      0.228,
+      1.452,
+      0.248
+    ],
+    "subMeshes": [
+      {
+        "id": "liver_caudate_lobe",
+        "name": "Lobo Caudado do Fígado (Segmento I/IX)",
+        "latinName": "Lobus caudatus hepatis",
+        "structureId": "liver",
+        "center": [
+          -0.126,
+          1.33,
+          -0.002
+        ],
+        "vertexCount": 2527,
+        "triangleCount": 3618
+      },
+      {
+        "id": "liver_right_lobe",
+        "name": "Lobo Hepático Direito (Segmentos V–VIII)",
+        "latinName": "Lobus hepatis dexter (Segmenta V–VIII)",
+        "structureId": "liver",
+        "center": [
+          -0.16,
+          1.264,
+          0.051
+        ],
+        "vertexCount": 6288,
+        "triangleCount": 13808
+      },
+      {
+        "id": "gallbladder_biliary",
+        "name": "Vesícula Biliar e Vias Biliares",
+        "latinName": "Vesica biliaris et Ductus biliferi",
+        "structureId": "liver",
+        "center": [
+          -0.068,
+          1.19,
+          0.104
+        ],
+        "vertexCount": 1606,
+        "triangleCount": 3156
+      },
+      {
+        "id": "liver_left_lobe",
+        "name": "Lobo Hepático Esquerdo (Segmentos II–IV)",
+        "latinName": "Lobus hepatis sinister (Segmenta II–IV)",
+        "structureId": "liver",
+        "center": [
+          0.058,
+          1.3,
+          0.114
+        ],
+        "vertexCount": 6941,
+        "triangleCount": 9366
+      }
+    ]
+  },
+  "intestines_colon": {
+    "center": [
+      -0.012,
+      0.81,
+      0.01
+    ],
+    "min": [
+      -0.307,
+      0.422,
+      -0.215
+    ],
+    "max": [
+      0.284,
+      1.198,
+      0.235
+    ],
+    "subMeshes": [
+      {
+        "id": "pancreas_organ",
+        "name": "Pâncreas e Ducto Pancreático Principal",
+        "latinName": "Pancreas et Ductus pancreaticus",
+        "structureId": "intestines_colon",
+        "center": [
+          0.019,
+          1.109,
+          0.051
+        ],
+        "vertexCount": 7694,
+        "triangleCount": 8564
+      },
+      {
+        "id": "large_intestine_colon",
+        "name": "Intestino Grosso (Ceco, Cólon Ascendente, Transverso, Descendente e Reto)",
+        "latinName": "Intestinum crassum (Colon et Rectum)",
+        "structureId": "intestines_colon",
+        "center": [
+          -0.012,
+          0.794,
+          0.01
+        ],
+        "vertexCount": 6408,
+        "triangleCount": 13964
+      },
+      {
+        "id": "small_intestine",
+        "name": "Intestino Delgado (Duodeno, Jejuno e Íleo)",
+        "latinName": "Intestinum tenue (Duodenum, Jejunum et Ileum)",
+        "structureId": "intestines_colon",
+        "center": [
+          0.024,
+          0.867,
+          0.106
+        ],
+        "vertexCount": 8349,
+        "triangleCount": 15506
+      }
+    ]
+  },
+  "heart": {
+    "center": [
+      0.052,
+      1.558,
+      0.057
+    ],
+    "min": [
+      -0.088,
+      1.431,
+      -0.072
+    ],
+    "max": [
+      0.192,
+      1.685,
+      0.185
+    ],
+    "subMeshes": [
+      {
+        "id": "heart_valves",
+        "name": "Valvas Cardíacas (Mitral, Tricúspide, Aórtica e Pulmonar)",
+        "latinName": "Valvae cordis",
+        "structureId": "heart",
+        "center": [
+          0.05,
+          1.558,
+          0.054
+        ],
+        "vertexCount": 6679,
+        "triangleCount": 13766
+      },
+      {
+        "id": "heart_papillary",
+        "name": "Músculos Papilares Cardíacos",
+        "latinName": "Musculi papillares",
+        "structureId": "heart",
+        "center": [
+          0.099,
+          1.516,
+          0.094
+        ],
+        "vertexCount": 2486,
+        "triangleCount": 3762
+      },
+      {
+        "id": "heart_ventricles",
+        "name": "Miocárdio e Câmaras Ventriculares (Direita e Esquerda)",
+        "latinName": "Ventriculi cordis (Dexter et Sinister)",
+        "structureId": "heart",
+        "center": [
+          0.068,
+          1.542,
+          0.072
+        ],
+        "vertexCount": 7469,
+        "triangleCount": 11314
+      },
+      {
+        "id": "heart_right_atrium",
+        "name": "Átrio Direito",
+        "latinName": "Atrium cordis dextrum",
+        "structureId": "heart",
+        "center": [
+          -0.036,
+          1.569,
+          0.067
+        ],
+        "vertexCount": 3242,
+        "triangleCount": 5198
+      },
+      {
+        "id": "heart_left_atrium",
+        "name": "Átrio Esquerdo",
+        "latinName": "Atrium cordis sinistrum",
+        "structureId": "heart",
+        "center": [
+          0.049,
+          1.58,
+          0.026
+        ],
+        "vertexCount": 2961,
+        "triangleCount": 5082
+      }
+    ]
+  },
+  "left_lung": {
+    "center": [
+      0.175,
+      1.585,
+      -0.003
+    ],
+    "min": [
+      0.042,
+      1.3,
+      -0.195
+    ],
+    "max": [
+      0.308,
+      1.87,
+      0.188
+    ],
+    "subMeshes": [
+      {
+        "id": "left_bronchial_tree",
+        "name": "Árvore Brônquica Segmentar Esquerda",
+        "latinName": "Arbor bronchialis sinistra",
+        "structureId": "left_lung",
+        "center": [
+          0.177,
+          1.587,
+          -0.002
+        ],
+        "vertexCount": 5720,
+        "triangleCount": 7922
+      },
+      {
+        "id": "left_lung_parenchyma",
+        "name": "Parênquima Pulmonar Esquerdo (Lobo Superior, Língula e Lobo Inferior)",
+        "latinName": "Pulmo sinister (Lobi superior et inferior)",
+        "structureId": "left_lung",
+        "center": [
+          0.175,
+          1.585,
+          -0.03
+        ],
+        "vertexCount": 4537,
+        "triangleCount": 10945
+      }
+    ]
+  },
+  "right_lung": {
+    "center": [
+      -0.163,
+      1.585,
+      -0.008
+    ],
+    "min": [
+      -0.305,
+      1.3,
+      -0.195
+    ],
+    "max": [
+      -0.022,
+      1.87,
+      0.178
+    ],
+    "subMeshes": [
+      {
+        "id": "right_bronchial_tree",
+        "name": "Árvore Brônquica Segmentar Direita",
+        "latinName": "Arbor bronchialis dextra",
+        "structureId": "right_lung",
+        "center": [
+          -0.152,
+          1.594,
+          -0.002
+        ],
+        "vertexCount": 3212,
+        "triangleCount": 7982
+      },
+      {
+        "id": "right_lung_parenchyma",
+        "name": "Parênquima Pulmonar Direito (Lobos Superior, Médio e Inferior)",
+        "latinName": "Pulmo dexter (Lobi superior, medius et inferior)",
+        "structureId": "right_lung",
+        "center": [
+          -0.173,
+          1.585,
+          -0.03
+        ],
+        "vertexCount": 4393,
+        "triangleCount": 9872
+      }
+    ]
+  },
+  "trachea_bronchi": {
+    "center": [
+      0.027,
+      1.877,
+      0.084
+    ],
+    "min": [
+      -0.122,
+      1.503,
+      -0.094
+    ],
+    "max": [
+      0.175,
+      2.25,
+      0.262
+    ],
+    "subMeshes": [
+      {
+        "id": "main_bronchi_carina",
+        "name": "Brônquios Principais Direito e Esquerdo",
+        "latinName": "Larynx, Trachea et Bronchi principales",
+        "structureId": "trachea_bronchi",
+        "center": [
+          0.027,
+          1.617,
+          -0.049
+        ],
+        "vertexCount": 2944,
+        "triangleCount": 4940
+      },
+      {
+        "id": "trachea_larynx",
+        "name": "Laringe, Epiglote e Traqueia",
+        "latinName": "Larynx, Trachea et Bronchi principales",
+        "structureId": "trachea_bronchi",
+        "center": [
+          -0.001,
+          1.975,
+          0.104
+        ],
+        "vertexCount": 3864,
+        "triangleCount": 5106
+      }
+    ]
+  },
+  "stomach": {
+    "center": [
+      0.103,
+      1.53,
+      0.049
+    ],
+    "min": [
+      -0.07,
+      1.106,
+      -0.13
+    ],
+    "max": [
+      0.276,
+      1.954,
+      0.228
+    ],
+    "subMeshes": [
+      {
+        "id": "spleen_organ",
+        "name": "Baço (Órgão Linfoide Esplênico)",
+        "latinName": "Splen (Lien)",
+        "structureId": "stomach",
+        "center": [
+          0.205,
+          1.219,
+          -0.015
+        ],
+        "vertexCount": 624,
+        "triangleCount": 1206
+      },
+      {
+        "id": "esophagus_tube",
+        "name": "Esôfago Torácico e Abdominal",
+        "latinName": "Oesophagus",
+        "structureId": "stomach",
+        "center": [
+          0.018,
+          1.622,
+          -0.011
+        ],
+        "vertexCount": 173,
+        "triangleCount": 296
+      },
+      {
+        "id": "stomach_body",
+        "name": "Estômago (Fundo, Corpo e Antro Pilórico)",
+        "latinName": "Gaster (Ventriculus)",
+        "structureId": "stomach",
+        "center": [
+          0.093,
+          1.247,
+          0.092
+        ],
+        "vertexCount": 852,
+        "triangleCount": 1686
+      }
+    ]
+  },
+  "cervical_spine": {
+    "center": [
+      -0.001,
+      2.027,
+      -0.06
+    ],
+    "min": [
+      -0.1,
+      1.881,
+      -0.191
+    ],
+    "max": [
+      0.097,
+      2.174,
+      0.07
+    ],
+    "subMeshes": [
+      {
+        "id": "cervical_c3_c7",
+        "name": "Vértebras Cervicais (C3–C7), Discos e Osso Hioide",
+        "latinName": "Vertebrae cervicales [CIII–CVII] et Os hyoideum",
+        "structureId": "cervical_spine",
+        "center": [
+          -0.002,
+          1.99,
+          -0.06
+        ],
+        "vertexCount": 6148,
+        "triangleCount": 13788
+      },
+      {
+        "id": "cervical_c1_atlas",
+        "name": "Atlas (Vértebra C1)",
+        "latinName": "Atlas [CI]",
+        "structureId": "cervical_spine",
+        "center": [
+          -0.001,
+          2.151,
+          -0.087
+        ],
+        "vertexCount": 1114,
+        "triangleCount": 1514
+      },
+      {
+        "id": "cervical_c2_axis",
+        "name": "Áxis (Vértebra C2)",
+        "latinName": "Axis [CII]",
+        "structureId": "cervical_spine",
+        "center": [
+          -0.002,
+          2.112,
+          -0.093
+        ],
+        "vertexCount": 1408,
+        "triangleCount": 2028
+      }
+    ]
+  },
+  "tibia_fibula_foot": {
+    "center": [
+      0,
+      0.219,
+      0.073
+    ],
+    "min": [
+      -0.41,
+      -1.582,
+      -0.184
+    ],
+    "max": [
+      0.41,
+      2.019,
+      0.329
+    ],
+    "subMeshes": [
+      {
+        "id": "foot_bones_left",
+        "name": "Ossos do Pé Esquerdo (Tarso, Metatarso e Falanges)",
+        "latinName": "Ossa pedis (Tarsi, Metatarsi et Phalanges)",
+        "structureId": "tibia_fibula_foot",
+        "center": [
+          0.209,
+          0.219,
+          0.073
+        ],
+        "vertexCount": 8443,
+        "triangleCount": 14142
+      },
+      {
+        "id": "foot_bones_right",
+        "name": "Ossos do Pé Direito (Tarso, Metatarso e Falanges)",
+        "latinName": "Ossa pedis (Tarsi, Metatarsi et Phalanges)",
+        "structureId": "tibia_fibula_foot",
+        "center": [
+          -0.21,
+          0.219,
+          0.073
+        ],
+        "vertexCount": 8578,
+        "triangleCount": 13736
+      },
+      {
+        "id": "crus_bones_left",
+        "name": "Patela, Tíbia e Fíbula Esquerdas",
+        "latinName": "Patella, Tibia et Fibula",
+        "structureId": "tibia_fibula_foot",
+        "center": [
+          0.188,
+          -0.956,
+          -0.034
+        ],
+        "vertexCount": 657,
+        "triangleCount": 1202
+      },
+      {
+        "id": "crus_bones_right",
+        "name": "Patela, Tíbia e Fíbula Direitas",
+        "latinName": "Patella, Tibia et Fibula",
+        "structureId": "tibia_fibula_foot",
+        "center": [
+          -0.188,
+          -0.957,
+          -0.035
+        ],
+        "vertexCount": 672,
+        "triangleCount": 1236
+      }
+    ]
+  },
+  "kidneys": {
+    "center": [
+      0.003,
+      0.787,
+      0.049
+    ],
+    "min": [
+      -0.212,
+      0.304,
+      -0.105
+    ],
+    "max": [
+      0.219,
+      1.271,
+      0.204
+    ],
+    "subMeshes": [
+      {
+        "id": "kidney_left",
+        "name": "Rim Esquerdo e Glândula Suprarrenal Esquerda",
+        "latinName": "Ren sinister et Glandula suprarenalis",
+        "structureId": "kidneys",
+        "center": [
+          0.142,
+          1.121,
+          -0.049
+        ],
+        "vertexCount": 1553,
+        "triangleCount": 3090
+      },
+      {
+        "id": "kidney_right",
+        "name": "Rim Direito e Glândula Suprarrenal Direita",
+        "latinName": "Ren dexter et Glandula suprarenalis",
+        "structureId": "kidneys",
+        "center": [
+          -0.143,
+          1.075,
+          -0.028
+        ],
+        "vertexCount": 1481,
+        "triangleCount": 2944
+      },
+      {
+        "id": "ureters_bladder",
+        "name": "Ureteres, Bexiga Urinária e Uretra",
+        "latinName": "Ureteres et Vesica urinaria",
+        "structureId": "kidneys",
+        "center": [
+          0.008,
+          0.744,
+          0.049
+        ],
+        "vertexCount": 1387,
+        "triangleCount": 2108
+      }
+    ]
+  },
+  "pelvis_sacrum": {
+    "center": [
+      0,
+      0.658,
+      -0.083
+    ],
+    "min": [
+      -0.351,
+      0.409,
+      -0.26
+    ],
+    "max": [
+      0.35,
+      0.907,
+      0.094
+    ],
+    "subMeshes": [
+      {
+        "id": "pelvis_hip_right",
+        "name": "Osso Coxal Direito (Ílio, Ísquio e Púbis)",
+        "latinName": "Os coxae",
+        "structureId": "pelvis_sacrum",
+        "center": [
+          -0.179,
+          0.658,
+          -0.072
+        ],
+        "vertexCount": 1036,
+        "triangleCount": 1898
+      },
+      {
+        "id": "pelvis_hip_left",
+        "name": "Osso Coxal Esquerdo (Ílio, Ísquio e Púbis)",
+        "latinName": "Os coxae",
+        "structureId": "pelvis_sacrum",
+        "center": [
+          0.178,
+          0.658,
+          -0.073
+        ],
+        "vertexCount": 986,
+        "triangleCount": 1808
+      },
+      {
+        "id": "pelvis_sacrum_coccyx",
+        "name": "Osso Sacro e Cóccix",
+        "latinName": "Os sacrum et Os coccygis",
+        "structureId": "pelvis_sacrum",
+        "center": [
+          -0.002,
+          0.658,
+          -0.152
+        ],
+        "vertexCount": 2771,
+        "triangleCount": 5058
+      }
+    ]
+  },
+  "sternum": {
+    "center": [
+      0,
+      1.601,
+      0.175
+    ],
+    "min": [
+      -0.066,
+      1.406,
+      0.075
+    ],
+    "max": [
+      0.066,
+      1.796,
+      0.275
+    ],
+    "subMeshes": [
+      {
+        "id": "sternum_xiphoid",
+        "name": "Processo Xifoide",
+        "latinName": "Sternum",
+        "structureId": "sternum",
+        "center": [
+          0,
+          1.431,
+          0.256
+        ],
+        "vertexCount": 464,
+        "triangleCount": 864
+      },
+      {
+        "id": "sternum_body",
+        "name": "Corpo do Esterno",
+        "latinName": "Sternum",
+        "structureId": "sternum",
+        "center": [
+          0.001,
+          1.577,
+          0.217
+        ],
+        "vertexCount": 2511,
+        "triangleCount": 2810
+      },
+      {
+        "id": "sternum_manubrium",
+        "name": "Manúbrio do Esterno",
+        "latinName": "Sternum",
+        "structureId": "sternum",
+        "center": [
+          0,
+          1.742,
+          0.132
+        ],
+        "vertexCount": 1094,
+        "triangleCount": 1892
+      }
+    ]
+  },
+  "thoracic_spine": {
+    "center": [
+      -0.001,
+      1.526,
+      -0.119
+    ],
+    "min": [
+      -0.09,
+      1.131,
+      -0.241
+    ],
+    "max": [
+      0.088,
+      1.921,
+      0.003
+    ],
+    "subMeshes": [
+      {
+        "id": "thoracic_vertebrae",
+        "name": "Corpos e Arcos Vertebrais Torácicos (T1–T12)",
+        "latinName": "Vertebrae thoracicae [TI–TXII]",
+        "structureId": "thoracic_spine",
+        "center": [
+          -0.001,
+          1.526,
+          -0.119
+        ],
+        "vertexCount": 5463,
+        "triangleCount": 11340
+      },
+      {
+        "id": "thoracic_disks",
+        "name": "Discos Intervertebrais Torácicos",
+        "latinName": "Disci intervertebrales thoracici",
+        "structureId": "thoracic_spine",
+        "center": [
+          -0.002,
+          1.549,
+          -0.087
+        ],
+        "vertexCount": 3117,
+        "triangleCount": 6716
+      }
+    ]
+  },
+  "lumbar_spine": {
+    "center": [
+      -0.002,
+      0.977,
+      -0.08
+    ],
+    "min": [
+      -0.123,
+      0.755,
+      -0.198
+    ],
+    "max": [
+      0.12,
+      1.2,
+      0.039
+    ],
+    "subMeshes": [
+      {
+        "id": "lumbar_vertebrae",
+        "name": "Vértebras Lombares (L1–L5)",
+        "latinName": "Vertebrae lumbales [LI–LV]",
+        "structureId": "lumbar_spine",
+        "center": [
+          -0.002,
+          0.981,
+          -0.08
+        ],
+        "vertexCount": 7276,
+        "triangleCount": 12620
+      },
+      {
+        "id": "lumbar_disks",
+        "name": "Discos Intervertebrais Lombares",
+        "latinName": "Disci intervertebrales lumbales",
+        "structureId": "lumbar_spine",
+        "center": [
+          -0.002,
+          0.977,
+          -0.036
+        ],
+        "vertexCount": 3447,
+        "triangleCount": 7174
+      }
+    ]
+  },
+  "forearm_hand": {
+    "center": [
+      0,
+      0.653,
+      0.048
+    ],
+    "min": [
+      -0.784,
+      0.169,
+      -0.134
+    ],
+    "max": [
+      0.784,
+      1.136,
+      0.231
+    ],
+    "subMeshes": [
+      {
+        "id": "hand_bones_left",
+        "name": "Ossos da Mão Esquerda (Carpo, Metacarpo e Falanges)",
+        "latinName": "Ossa manus (Carpi, Metacarpi et Phalanges)",
+        "structureId": "forearm_hand",
+        "center": [
+          0.657,
+          0.362,
+          0.128
+        ],
+        "vertexCount": 5812,
+        "triangleCount": 9598
+      },
+      {
+        "id": "hand_bones_right",
+        "name": "Ossos da Mão Direita (Carpo, Metacarpo e Falanges)",
+        "latinName": "Ossa manus (Carpi, Metacarpi et Phalanges)",
+        "structureId": "forearm_hand",
+        "center": [
+          -0.657,
+          0.362,
+          0.128
+        ],
+        "vertexCount": 5833,
+        "triangleCount": 9032
+      },
+      {
+        "id": "forearm_left",
+        "name": "Rádio e Ulna Esquerdos",
+        "latinName": "Radius et Ulna",
+        "structureId": "forearm_hand",
+        "center": [
+          0.576,
+          0.837,
+          -0.034
+        ],
+        "vertexCount": 533,
+        "triangleCount": 840
+      },
+      {
+        "id": "forearm_right",
+        "name": "Rádio e Ulna Direitos",
+        "latinName": "Radius et Ulna",
+        "structureId": "forearm_hand",
+        "center": [
+          -0.576,
+          0.837,
+          -0.034
+        ],
+        "vertexCount": 554,
+        "triangleCount": 890
+      }
+    ]
+  },
+  "rib_cage": {
+    "center": [
+      -0.002,
+      1.467,
+      0.02
+    ],
+    "min": [
+      -0.332,
+      1.029,
+      -0.233
+    ],
+    "max": [
+      0.328,
+      1.906,
+      0.274
+    ],
+    "subMeshes": [
+      {
+        "id": "ribs_left_false",
+        "name": "Costelas Falsas e Flutuantes Esquerdas (VIII–XII)",
+        "latinName": "Costae sinistrae",
+        "structureId": "rib_cage",
+        "center": [
+          0.163,
+          1.406,
+          0.021
+        ],
+        "vertexCount": 5999,
+        "triangleCount": 11088
+      },
+      {
+        "id": "ribs_left_true",
+        "name": "Costelas Verdadeiras Esquerdas (I–VII)",
+        "latinName": "Costae sinistrae",
+        "structureId": "rib_cage",
+        "center": [
+          0.179,
+          1.585,
+          0.002
+        ],
+        "vertexCount": 6310,
+        "triangleCount": 12380
+      },
+      {
+        "id": "ribs_right_false",
+        "name": "Costelas Falsas e Flutuantes Direitas (VIII–XII)",
+        "latinName": "Costae dextrae",
+        "structureId": "rib_cage",
+        "center": [
+          -0.166,
+          1.406,
+          0.021
+        ],
+        "vertexCount": 6184,
+        "triangleCount": 11046
+      },
+      {
+        "id": "ribs_right_true",
+        "name": "Costelas Verdadeiras Direitas (I–VII)",
+        "latinName": "Costae dextrae",
+        "structureId": "rib_cage",
+        "center": [
+          -0.182,
+          1.585,
+          0.002
+        ],
+        "vertexCount": 6308,
+        "triangleCount": 12394
+      }
+    ]
+  },
+  "clavicles": {
+    "center": [
+      -0.002,
+      1.812,
+      0.002
+    ],
+    "min": [
+      -0.352,
+      1.756,
+      -0.11
+    ],
+    "max": [
+      0.348,
+      1.869,
+      0.114
+    ],
+    "subMeshes": [
+      {
+        "id": "clavicle_left",
+        "name": "Clavícula Esquerda",
+        "latinName": "Clavicula",
+        "structureId": "clavicles",
+        "center": [
+          0.184,
+          1.812,
+          0.002
+        ],
+        "vertexCount": 426,
+        "triangleCount": 826
+      },
+      {
+        "id": "clavicle_right",
+        "name": "Clavícula Direita",
+        "latinName": "Clavicula",
+        "structureId": "clavicles",
+        "center": [
+          -0.188,
+          1.813,
+          0.002
+        ],
+        "vertexCount": 420,
+        "triangleCount": 820
+      }
+    ]
+  },
+  "femora": {
+    "center": [
+      0,
+      0.043,
+      -0.046
+    ],
+    "min": [
+      -0.363,
+      -0.52,
+      -0.122
+    ],
+    "max": [
+      0.364,
+      0.607,
+      0.03
+    ],
+    "subMeshes": [
+      {
+        "id": "femur_left",
+        "name": "Fêmur Esquerdo",
+        "latinName": "Femur",
+        "structureId": "femora",
+        "center": [
+          0.221,
+          0.043,
+          -0.046
+        ],
+        "vertexCount": 459,
+        "triangleCount": 884
+      },
+      {
+        "id": "femur_right",
+        "name": "Fêmur Direito",
+        "latinName": "Femur",
+        "structureId": "femora",
+        "center": [
+          -0.22,
+          0.043,
+          -0.047
+        ],
+        "vertexCount": 480,
+        "triangleCount": 930
+      }
+    ]
+  },
+  "humeri": {
+    "center": [
+      0,
+      1.452,
+      -0.059
+    ],
+    "min": [
+      -0.583,
+      1.08,
+      -0.118
+    ],
+    "max": [
+      0.583,
+      1.823,
+      0.001
+    ],
+    "subMeshes": [
+      {
+        "id": "humerus_left",
+        "name": "Úmero Esquerdo",
+        "latinName": "Humerus",
+        "structureId": "humeri",
+        "center": [
+          0.461,
+          1.452,
+          -0.059
+        ],
+        "vertexCount": 586,
+        "triangleCount": 962
+      },
+      {
+        "id": "humerus_right",
+        "name": "Úmero Direito",
+        "latinName": "Humerus",
+        "structureId": "humeri",
+        "center": [
+          -0.461,
+          1.452,
+          -0.059
+        ],
+        "vertexCount": 794,
+        "triangleCount": 1070
+      }
+    ]
+  },
+  "scapulae": {
+    "center": [
+      0,
+      1.655,
+      -0.124
+    ],
+    "min": [
+      -0.403,
+      1.454,
+      -0.254
+    ],
+    "max": [
+      0.403,
+      1.856,
+      0.007
+    ],
+    "subMeshes": [
+      {
+        "id": "scapula_left",
+        "name": "Escápula Esquerda",
+        "latinName": "Scapula",
+        "structureId": "scapulae",
+        "center": [
+          0.271,
+          1.655,
+          -0.124
+        ],
+        "vertexCount": 3097,
+        "triangleCount": 6180
+      },
+      {
+        "id": "scapula_right",
+        "name": "Escápula Direita",
+        "latinName": "Scapula",
+        "structureId": "scapulae",
+        "center": [
+          -0.27,
+          1.655,
+          -0.124
+        ],
+        "vertexCount": 2896,
+        "triangleCount": 5756
+      }
+    ]
+  }
+}
