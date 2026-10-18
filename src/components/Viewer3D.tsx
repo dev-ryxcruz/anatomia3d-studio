@@ -142,12 +142,17 @@ function CameraController({
     const defaultTarget = new THREE.Vector3(0, defaultY, 0);
 
     if (preset === 'focus' && focusCenter) {
-      const look = new THREE.Vector3(focusCenter[0], focusCenter[1], focusCenter[2]);
+      const mobileYOffset = isMobilePortrait ? -0.22 : 0;
+      const look = new THREE.Vector3(
+        focusCenter[0],
+        focusCenter[1] + mobileYOffset,
+        focusCenter[2]
+      );
       targetLookAt.current = look;
-      const focusDist = isMobilePortrait ? 1.45 : 1.15;
+      const focusDist = isMobilePortrait ? 1.55 : 1.15;
       targetPos.current = new THREE.Vector3(
         focusCenter[0] + 0.28,
-        focusCenter[1] + 0.16,
+        focusCenter[1] + 0.12 + mobileYOffset,
         focusCenter[2] + focusDist
       );
       return;

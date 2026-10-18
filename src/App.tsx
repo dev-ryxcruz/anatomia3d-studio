@@ -89,6 +89,7 @@ export function App() {
     () => new Set(['cranium', 'heart'])
   );
   const [sidebarOpenMobile, setSidebarOpenMobile] = useState(false);
+  const [mobileSidebarExpanded, setMobileSidebarExpanded] = useState(false);
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
   const [mobileDockPopover, setMobileDockPopover] = useState<
     'slice' | 'views' | null
@@ -238,7 +239,6 @@ export function App() {
     setSelectedId(targetStructureId);
     setSelectedSubMeshId(targetSubMeshId);
     setMobileSheetExpanded(false);
-    setSidebarOpenMobile(false);
     setTimeout(() => triggerCamera('focus'), 40);
   };
 
@@ -258,7 +258,6 @@ export function App() {
     setSelectedId(targetStructureId);
     setSelectedSubMeshId(null);
     setMobileSheetExpanded(false);
-    setSidebarOpenMobile(false);
     setTimeout(() => triggerCamera('focus'), 40);
   };
 
@@ -289,7 +288,6 @@ export function App() {
     setSelectedId(parentStructureId);
     setSelectedSubMeshId(targetSubMeshId);
     setMobileSheetExpanded(false);
-    setSidebarOpenMobile(false);
     setTimeout(() => triggerCamera('focus'), 40);
   };
 
@@ -686,6 +684,28 @@ export function App() {
                   onClick={() => setMobileToolsOpen(false)}
                 />
                 <div className="mobile-tools-dropdown" role="menu">
+                  <div className="mobile-dropdown-section">
+                    <span className="mobile-dropdown-label">
+                      <Database size={13} className="text-cyan" /> Modelo / Dataset .GLB
+                    </span>
+                    <select
+                      value={activeGlbUrl}
+                      onChange={(e) => {
+                        setActiveGlbUrl(e.target.value);
+                        setMobileToolsOpen(false);
+                        setTimeout(() => triggerCamera('reset'), 80);
+                      }}
+                      className="mobile-dropdown-select"
+                      aria-label="Selecionar modelo GLB"
+                    >
+                      {BUILTIN_GLB_MODELS.map((m) => (
+                        <option key={m.id} value={m.url}>
+                          {m.name} ({m.sizeMB})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="mobile-dropdown-divider" />
                   <button
                     type="button"
                     className="mobile-dropdown-item"
@@ -696,6 +716,17 @@ export function App() {
                   >
                     <FileUp size={16} />
                     <span>Importar .GLB</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-dropdown-item"
+                    onClick={() => {
+                      setMobileToolsOpen(false);
+                      handleExportSelectedGlb();
+                    }}
+                  >
+                    <Download size={16} />
+                    <span>Exportar Peça .GLB</span>
                   </button>
                   <button
                     type="button"
@@ -746,13 +777,59 @@ export function App() {
             onClick={() => setSidebarOpenMobile(false)}
           />
         )}
-        {/* LEFT SIDEBAR: GLB SELECTOR, SYSTEMS, FILTERS & SUB-MESH HIERARCHY */}
+        {/* LEFT SIDEBAR (Desktop) / HALF-SCREEN BOTTOM SHEET (Mobile < 768px) */}
         <aside
-          className={`sidebar-panel ${sidebarOpenMobile ? 'sidebar-open' : ''}`}
+          className={`sidebar-panel ${sidebarOpenMobile ? 'sidebar-open' : ''} ${
+            mobileSidebarExpanded ? 'sidebar-sheet-expanded' : ''
+          }`}
         >
+          {/* Mobile Half-Screen Sheet Top Bar */}
+          <div className="mobile-sidebar-sheet-header">
+            <div
+              className="mobile-sheet-handle"
+              onClick={() => setMobileSidebarExpanded((v) => !v)}
+            />
+            <div className="mobile-sidebar-title-row">
+              <span className="mobile-sidebar-sheet-title">
+                <Layers size={14} className="text-cyan" /> Sistemas & Estruturas
+                <span className="mobile-active-count">
+                  {visibleSubMeshCount} ativas
+                </span>
+              </span>
+              <div className="mobile-sidebar-sheet-controls">
+                <button
+                  type="button"
+                  className="mobile-sheet-size-btn"
+                  onClick={() => setMobileSidebarExpanded((v) => !v)}
+                >
+                  {mobileSidebarExpanded ? (
+                    <>
+                      <ChevronDown size={13} /> 50%
+                    </>
+                  ) : (
+                    <>
+                      <ChevronUp size={13} /> Expandir
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="info-close-btn"
+                  onClick={() => setSidebarOpenMobile(false)}
+                  aria-label="Fechar painel de sistemas"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="sidebar-header">
-            {/* Built-in GLB Model Switcher (public/models/) */}
-            <div className="region-filter-row" title="Selecionar arquivo .GLB em public/models/">
+            {/* Built-in GLB Model Switcher (Desktop only; on mobile moved to ⋮ menu) */}
+            <div
+              className="region-filter-row sidebar-dataset-row"
+              title="Selecionar arquivo .GLB em public/models/"
+            >
               <Database size={13} className="region-filter-icon" />
               <select
                 value={activeGlbUrl}
@@ -771,47 +848,48 @@ export function App() {
               </select>
             </div>
 
-            <div className="search-box">
-              <Search size={16} className="search-icon" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar osso, órgão, sub-malha ou TA98..."
-                aria-label="Buscar estrutura ou sub-malha anatômica"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  className="clear-search-btn"
-                  onClick={() => setSearchQuery('')}
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
+            <div className="sidebar-search-filter-grid">
+              <div className="search-box">
+                <Search size={15} className="search-icon" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar osso, órgão, TA98..."
+                  aria-label="Buscar estrutura ou sub-malha anatômica"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="clear-search-btn"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
 
-            {/* Region Filter Tabs */}
-            <div className="region-filter-row">
-              <Filter size={13} className="region-filter-icon" />
-              <select
-                value={activeRegionFilter}
-                onChange={(e) =>
-                  setActiveRegionFilter(e.target.value as RegionId | 'all')
-                }
-                className="region-select"
-                aria-label="Filtrar por região anatômica"
-              >
-                <option value="all">
-                  Todas as Regiões ({ANATOMICAL_STRUCTURES.length} estruturas /{' '}
-                  {atlasSubMeshes.length || 102} sub-malhas)
-                </option>
-                {ANATOMICAL_REGIONS.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name} ({r.latinName})
+              {/* Region Filter Tabs */}
+              <div className="region-filter-row">
+                <Filter size={13} className="region-filter-icon" />
+                <select
+                  value={activeRegionFilter}
+                  onChange={(e) =>
+                    setActiveRegionFilter(e.target.value as RegionId | 'all')
+                  }
+                  className="region-select"
+                  aria-label="Filtrar por região anatômica"
+                >
+                  <option value="all">
+                    Todas as Regiões ({ANATOMICAL_STRUCTURES.length})
                   </option>
-                ))}
-              </select>
+                  {ANATOMICAL_REGIONS.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name} ({r.latinName})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Quick Dissection Presets */}
@@ -964,6 +1042,7 @@ export function App() {
                                   if (hiddenIds.has(st.id)) {
                                     toggleStructureHidden(st.id);
                                   }
+                                  setTimeout(() => triggerCamera('focus'), 40);
                                 }}
                                 onMouseEnter={() => {
                                   setHoveredId(st.id);
@@ -981,6 +1060,14 @@ export function App() {
                                       {subMeshes.length} malhas
                                     </span>
                                   )}
+                                  {isXray && (
+                                    <span
+                                      className="row-status-badge row-status-xray"
+                                      title="Em modo Raio-X"
+                                    >
+                                      <Ghost size={10} /> Raio-X
+                                    </span>
+                                  )}
                                 </span>
                                 <span className="structure-latin">
                                   {st.latinName}
@@ -988,35 +1075,37 @@ export function App() {
                               </button>
 
                               <div className="structure-row-actions">
+                                <div className="desktop-row-actions">
+                                  <button
+                                    type="button"
+                                    className="icon-btn-sm"
+                                    onClick={() => focusOnStructure(st.id)}
+                                    title="Focar câmera nesta estrutura"
+                                  >
+                                    <Focus size={13} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`icon-btn-sm ${
+                                      isXray ? 'icon-btn-active' : ''
+                                    }`}
+                                    onClick={() => toggleStructureXray(st.id)}
+                                    title="Alternar transparência (Raio-X)"
+                                  >
+                                    <Ghost size={13} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="icon-btn-sm"
+                                    onClick={() => isolateStructure(st.id)}
+                                    title="Isolar apenas esta estrutura"
+                                  >
+                                    <Crosshair size={13} />
+                                  </button>
+                                </div>
                                 <button
                                   type="button"
-                                  className="icon-btn-sm"
-                                  onClick={() => focusOnStructure(st.id)}
-                                  title="Focar câmera nesta estrutura"
-                                >
-                                  <Focus size={13} />
-                                </button>
-                                <button
-                                  type="button"
-                                  className={`icon-btn-sm ${
-                                    isXray ? 'icon-btn-active' : ''
-                                  }`}
-                                  onClick={() => toggleStructureXray(st.id)}
-                                  title="Alternar transparência (Raio-X)"
-                                >
-                                  <Ghost size={13} />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="icon-btn-sm"
-                                  onClick={() => isolateStructure(st.id)}
-                                  title="Isolar apenas esta estrutura"
-                                >
-                                  <Crosshair size={13} />
-                                </button>
-                                <button
-                                  type="button"
-                                  className={`icon-btn-sm ${
+                                  className={`icon-btn-sm row-visibility-btn ${
                                     isHidden ? 'icon-btn-muted' : ''
                                   }`}
                                   onClick={() => toggleStructureHidden(st.id)}
@@ -1027,13 +1116,70 @@ export function App() {
                                   }
                                 >
                                   {isHidden ? (
-                                    <EyeOff size={13} />
+                                    <EyeOff size={14} />
                                   ) : (
-                                    <Eye size={13} />
+                                    <Eye size={14} />
                                   )}
                                 </button>
                               </div>
                             </div>
+
+                            {/* Progressive Disclosure Action Bar when Structure is selected */}
+                            {isSelected && !selectedSubMeshId && (
+                              <div className="progressive-action-bar">
+                                <button
+                                  type="button"
+                                  className="prog-action-btn"
+                                  onClick={() => focusOnStructure(st.id)}
+                                >
+                                  <Focus size={12} />
+                                  <span>Focar</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="prog-action-btn"
+                                  onClick={() => isolateStructure(st.id)}
+                                >
+                                  <Crosshair size={12} />
+                                  <span>Isolar</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`prog-action-btn ${
+                                    isXray ? 'prog-action-btn-active' : ''
+                                  }`}
+                                  onClick={() => toggleStructureXray(st.id)}
+                                >
+                                  <Ghost size={12} />
+                                  <span>Raio-X</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`prog-action-btn ${
+                                    isHidden ? 'prog-action-btn-active' : ''
+                                  }`}
+                                  onClick={() => toggleStructureHidden(st.id)}
+                                >
+                                  {isHidden ? (
+                                    <Eye size={12} />
+                                  ) : (
+                                    <EyeOff size={12} />
+                                  )}
+                                  <span>{isHidden ? 'Mostrar' : 'Ocultar'}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="prog-action-btn prog-action-btn-clinical"
+                                  onClick={() => {
+                                    setSidebarOpenMobile(false);
+                                    setMobileSheetExpanded(false);
+                                  }}
+                                >
+                                  <BookOpen size={12} />
+                                  <span>Detalhes Clínicos</span>
+                                </button>
+                              </div>
+                            )}
 
                             {/* Child Sub-Meshes mapped directly from .GLB */}
                             {isStructExpanded && subMeshes.length > 1 && (
@@ -1049,94 +1195,187 @@ export function App() {
                                   return (
                                     <li
                                       key={sm.id}
-                                      className={`submesh-row ${
-                                        isSmSelected
-                                          ? 'submesh-row-selected'
-                                          : ''
-                                      } ${
-                                        isSmHidden ? 'structure-row-hidden' : ''
-                                      }`}
+                                      className="submesh-item-wrapper"
                                     >
-                                      <button
-                                        type="button"
-                                        className="submesh-select-btn"
-                                        onClick={() => {
-                                          setSelectedId(st.id);
-                                          setSelectedSubMeshId(sm.id);
-                                          if (hiddenIds.has(sm.id)) {
-                                            toggleStructureHidden(sm.id);
-                                          }
-                                        }}
-                                        onMouseEnter={() => {
-                                          setHoveredId(st.id);
-                                          setHoveredSubMeshId(sm.id);
-                                        }}
-                                        onMouseLeave={() => {
-                                          setHoveredId(null);
-                                          setHoveredSubMeshId(null);
-                                        }}
+                                      <div
+                                        className={`submesh-row ${
+                                          isSmSelected
+                                            ? 'submesh-row-selected'
+                                            : ''
+                                        } ${
+                                          isSmHidden
+                                            ? 'structure-row-hidden'
+                                            : ''
+                                        }`}
                                       >
-                                        <span className="submesh-name">
-                                          ↳ {sm.name}
-                                        </span>
-                                        <span className="submesh-meta">
-                                          {sm.latinName} • {sm.vertexCount} vért.
-                                        </span>
-                                      </button>
-                                      <div className="structure-row-actions">
                                         <button
                                           type="button"
-                                          className="icon-btn-sm"
-                                          onClick={() =>
-                                            focusOnStructure(st.id, sm.id)
-                                          }
-                                          title="Focar câmera nesta sub-malha"
+                                          className="submesh-select-btn"
+                                          onClick={() => {
+                                            setSelectedId(st.id);
+                                            setSelectedSubMeshId(sm.id);
+                                            if (hiddenIds.has(sm.id)) {
+                                              toggleStructureHidden(sm.id);
+                                            }
+                                            setTimeout(
+                                              () => triggerCamera('focus'),
+                                              40
+                                            );
+                                          }}
+                                          onMouseEnter={() => {
+                                            setHoveredId(st.id);
+                                            setHoveredSubMeshId(sm.id);
+                                          }}
+                                          onMouseLeave={() => {
+                                            setHoveredId(null);
+                                            setHoveredSubMeshId(null);
+                                          }}
                                         >
-                                          <Focus size={12} />
+                                          <span className="submesh-name">
+                                            ↳ {sm.name}
+                                            {isSmXray && (
+                                              <span className="row-status-badge row-status-xray">
+                                                <Ghost size={9} />
+                                              </span>
+                                            )}
+                                          </span>
+                                          <span className="submesh-meta">
+                                            {sm.latinName} • {sm.vertexCount}{' '}
+                                            vért.
+                                          </span>
                                         </button>
-                                        <button
-                                          type="button"
-                                          className={`icon-btn-sm ${
-                                            isSmXray ? 'icon-btn-active' : ''
-                                          }`}
-                                          onClick={() =>
-                                            toggleStructureXray(sm.id)
-                                          }
-                                          title="Raio-X nesta sub-malha"
-                                        >
-                                          <Ghost size={12} />
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="icon-btn-sm"
-                                          onClick={() =>
-                                            isolateSubMesh(st.id, sm.id)
-                                          }
-                                          title="Isolar apenas esta sub-malha"
-                                        >
-                                          <Crosshair size={12} />
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className={`icon-btn-sm ${
-                                            isSmHidden ? 'icon-btn-muted' : ''
-                                          }`}
-                                          onClick={() =>
-                                            toggleStructureHidden(sm.id)
-                                          }
-                                          title={
-                                            isSmHidden
-                                              ? 'Mostrar sub-malha'
-                                              : 'Ocultar sub-malha'
-                                          }
-                                        >
-                                          {isSmHidden ? (
-                                            <EyeOff size={12} />
-                                          ) : (
-                                            <Eye size={12} />
-                                          )}
-                                        </button>
+                                        <div className="structure-row-actions">
+                                          <div className="desktop-row-actions">
+                                            <button
+                                              type="button"
+                                              className="icon-btn-sm"
+                                              onClick={() =>
+                                                focusOnStructure(st.id, sm.id)
+                                              }
+                                              title="Focar câmera nesta sub-malha"
+                                            >
+                                              <Focus size={12} />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className={`icon-btn-sm ${
+                                                isSmXray
+                                                  ? 'icon-btn-active'
+                                                  : ''
+                                              }`}
+                                              onClick={() =>
+                                                toggleStructureXray(sm.id)
+                                              }
+                                              title="Raio-X nesta sub-malha"
+                                            >
+                                              <Ghost size={12} />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="icon-btn-sm"
+                                              onClick={() =>
+                                                isolateSubMesh(st.id, sm.id)
+                                              }
+                                              title="Isolar apenas esta sub-malha"
+                                            >
+                                              <Crosshair size={12} />
+                                            </button>
+                                          </div>
+                                          <button
+                                            type="button"
+                                            className={`icon-btn-sm row-visibility-btn ${
+                                              isSmHidden ? 'icon-btn-muted' : ''
+                                            }`}
+                                            onClick={() =>
+                                              toggleStructureHidden(sm.id)
+                                            }
+                                            title={
+                                              isSmHidden
+                                                ? 'Mostrar sub-malha'
+                                                : 'Ocultar sub-malha'
+                                            }
+                                          >
+                                            {isSmHidden ? (
+                                              <EyeOff size={13} />
+                                            ) : (
+                                              <Eye size={13} />
+                                            )}
+                                          </button>
+                                        </div>
                                       </div>
+
+                                      {/* Progressive Disclosure Action Bar for Selected Sub-Mesh */}
+                                      {isSmSelected && (
+                                        <div className="progressive-action-bar">
+                                          <button
+                                            type="button"
+                                            className="prog-action-btn"
+                                            onClick={() =>
+                                              focusOnStructure(st.id, sm.id)
+                                            }
+                                          >
+                                            <Focus size={12} />
+                                            <span>Focar</span>
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="prog-action-btn"
+                                            onClick={() =>
+                                              isolateSubMesh(st.id, sm.id)
+                                            }
+                                          >
+                                            <Crosshair size={12} />
+                                            <span>Isolar</span>
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={`prog-action-btn ${
+                                              isSmXray
+                                                ? 'prog-action-btn-active'
+                                                : ''
+                                            }`}
+                                            onClick={() =>
+                                              toggleStructureXray(sm.id)
+                                            }
+                                          >
+                                            <Ghost size={12} />
+                                            <span>Raio-X</span>
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={`prog-action-btn ${
+                                              isSmHidden
+                                                ? 'prog-action-btn-active'
+                                                : ''
+                                            }`}
+                                            onClick={() =>
+                                              toggleStructureHidden(sm.id)
+                                            }
+                                          >
+                                            {isSmHidden ? (
+                                              <Eye size={12} />
+                                            ) : (
+                                              <EyeOff size={12} />
+                                            )}
+                                            <span>
+                                              {isSmHidden
+                                                ? 'Mostrar'
+                                                : 'Ocultar'}
+                                            </span>
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="prog-action-btn prog-action-btn-clinical"
+                                            onClick={() => {
+                                              setSidebarOpenMobile(false);
+                                              setMobileSheetExpanded(false);
+                                            }}
+                                          >
+                                            <BookOpen size={12} />
+                                            <span>Detalhes Clínicos</span>
+                                          </button>
+                                        </div>
+                                      )}
                                     </li>
                                   );
                                 })}
@@ -1185,65 +1424,138 @@ export function App() {
                       const isXray = xrayIds.has(m.id);
                       const isSelected = selectedId === m.id;
                       return (
-                        <li
-                          key={m.id}
-                          className={`structure-row ${
-                            isSelected ? 'structure-row-selected' : ''
-                          } ${isHidden ? 'structure-row-hidden' : ''}`}
-                        >
-                          <button
-                            type="button"
-                            className="structure-select-btn"
-                            onClick={() => {
-                              setSelectedId(m.id);
-                              setSelectedSubMeshId(null);
-                            }}
+                        <li key={m.id} className="structure-item-block">
+                          <div
+                            className={`structure-row ${
+                              isSelected ? 'structure-row-selected' : ''
+                            } ${isHidden ? 'structure-row-hidden' : ''}`}
                           >
-                            <span className="structure-title">{m.name}</span>
-                            <span className="structure-latin">
-                              {m.vertexCount} vértices • {m.triangleCount} triâng.
-                            </span>
-                          </button>
-                          <div className="structure-row-actions">
                             <button
                               type="button"
-                              className="icon-btn-sm"
-                              onClick={() => focusOnStructure(m.id)}
-                              title="Focar peça"
+                              className="structure-select-btn"
+                              onClick={() => {
+                                setSelectedId(m.id);
+                                setSelectedSubMeshId(null);
+                                if (hiddenIds.has(m.id)) {
+                                  toggleStructureHidden(m.id);
+                                }
+                                setTimeout(() => triggerCamera('focus'), 40);
+                              }}
                             >
-                              <Focus size={13} />
+                              <span className="structure-title">
+                                {m.name}
+                                {isXray && (
+                                  <span className="row-status-badge row-status-xray">
+                                    <Ghost size={10} /> Raio-X
+                                  </span>
+                                )}
+                              </span>
+                              <span className="structure-latin">
+                                {m.vertexCount} vértices • {m.triangleCount}{' '}
+                                triâng.
+                              </span>
                             </button>
-                            <button
-                              type="button"
-                              className={`icon-btn-sm ${
-                                isXray ? 'icon-btn-active' : ''
-                              }`}
-                              onClick={() => toggleStructureXray(m.id)}
-                              title="Alternar Raio-X"
-                            >
-                              <Ghost size={13} />
-                            </button>
-                            <button
-                              type="button"
-                              className="icon-btn-sm"
-                              onClick={() => isolateStructure(m.id)}
-                              title="Isolar peça"
-                            >
-                              <Crosshair size={13} />
-                            </button>
-                            <button
-                              type="button"
-                              className="icon-btn-sm"
-                              onClick={() => toggleStructureHidden(m.id)}
-                              title={isHidden ? 'Mostrar' : 'Ocultar'}
-                            >
-                              {isHidden ? (
-                                <EyeOff size={13} />
-                              ) : (
-                                <Eye size={13} />
-                              )}
-                            </button>
+                            <div className="structure-row-actions">
+                              <div className="desktop-row-actions">
+                                <button
+                                  type="button"
+                                  className="icon-btn-sm"
+                                  onClick={() => focusOnStructure(m.id)}
+                                  title="Focar peça"
+                                >
+                                  <Focus size={13} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`icon-btn-sm ${
+                                    isXray ? 'icon-btn-active' : ''
+                                  }`}
+                                  onClick={() => toggleStructureXray(m.id)}
+                                  title="Alternar Raio-X"
+                                >
+                                  <Ghost size={13} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="icon-btn-sm"
+                                  onClick={() => isolateStructure(m.id)}
+                                  title="Isolar peça"
+                                >
+                                  <Crosshair size={13} />
+                                </button>
+                              </div>
+                              <button
+                                type="button"
+                                className={`icon-btn-sm row-visibility-btn ${
+                                  isHidden ? 'icon-btn-muted' : ''
+                                }`}
+                                onClick={() => toggleStructureHidden(m.id)}
+                                title={isHidden ? 'Mostrar' : 'Ocultar'}
+                              >
+                                {isHidden ? (
+                                  <EyeOff size={14} />
+                                ) : (
+                                  <Eye size={14} />
+                                )}
+                              </button>
+                            </div>
                           </div>
+
+                          {isSelected && (
+                            <div className="progressive-action-bar">
+                              <button
+                                type="button"
+                                className="prog-action-btn"
+                                onClick={() => focusOnStructure(m.id)}
+                              >
+                                <Focus size={12} />
+                                <span>Focar</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="prog-action-btn"
+                                onClick={() => isolateStructure(m.id)}
+                              >
+                                <Crosshair size={12} />
+                                <span>Isolar</span>
+                              </button>
+                              <button
+                                type="button"
+                                className={`prog-action-btn ${
+                                  isXray ? 'prog-action-btn-active' : ''
+                                }`}
+                                onClick={() => toggleStructureXray(m.id)}
+                              >
+                                <Ghost size={12} />
+                                <span>Raio-X</span>
+                              </button>
+                              <button
+                                type="button"
+                                className={`prog-action-btn ${
+                                  isHidden ? 'prog-action-btn-active' : ''
+                                }`}
+                                onClick={() => toggleStructureHidden(m.id)}
+                              >
+                                {isHidden ? (
+                                  <Eye size={12} />
+                                ) : (
+                                  <EyeOff size={12} />
+                                )}
+                                <span>{isHidden ? 'Mostrar' : 'Ocultar'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="prog-action-btn prog-action-btn-clinical"
+                                onClick={() => {
+                                  setSidebarOpenMobile(false);
+                                  setMobileSheetExpanded(false);
+                                }}
+                              >
+                                <BookOpen size={12} />
+                                <span>Detalhes Clínicos</span>
+                              </button>
+                            </div>
+                          )}
                         </li>
                       );
                     })}
@@ -1431,7 +1743,9 @@ export function App() {
             selectedStructure || selectedImported
               ? 'info-panel-has-selection'
               : 'info-panel-empty-state'
-          } ${mobileSheetExpanded ? 'info-panel-sheet-expanded' : ''}`}
+          } ${mobileSheetExpanded ? 'info-panel-sheet-expanded' : ''} ${
+            sidebarOpenMobile ? 'info-panel-suppressed-mobile' : ''
+          }`}
         >
           {selectedStructure ? (
             <div className="info-content">

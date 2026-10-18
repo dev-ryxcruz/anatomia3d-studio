@@ -244,6 +244,14 @@ body,
   flex-direction: column;
   gap: 8px;
   min-width: 0;
+  flex-shrink: 0;
+}
+
+.sidebar-search-filter-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
 }
 
 .search-box {
@@ -350,6 +358,7 @@ body,
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-height: 0;
 }
 
 .system-group {
@@ -357,6 +366,7 @@ body,
   border: 1px solid var(--border-subtle);
   border-radius: 9px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .system-group-header {
@@ -379,6 +389,7 @@ body,
   cursor: pointer;
   text-align: left;
   flex: 1;
+  min-width: 0;
 }
 
 .system-swatch {
@@ -397,12 +408,14 @@ body,
   border-radius: 99px;
   margin-left: auto;
   margin-right: 6px;
+  flex-shrink: 0;
 }
 
 .system-controls {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .icon-btn,
@@ -443,9 +456,10 @@ body,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 5px 8px 5px 14px;
+  padding: 6px 8px 6px 14px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.08);
   transition: background 0.12s ease;
+  flex-shrink: 0;
 }
 
 .structure-row:last-child {
@@ -476,7 +490,9 @@ body,
 }
 
 .structure-title {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-size: 12px;
   font-weight: 500;
   color: var(--text-primary);
@@ -499,6 +515,74 @@ body,
   display: flex;
   align-items: center;
   gap: 2px;
+  flex-shrink: 0;
+}
+
+.desktop-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.row-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  font-size: 9.5px;
+  font-weight: 600;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+
+.row-status-xray {
+  background: rgba(6, 182, 212, 0.18);
+  color: var(--accent-cyan-bright);
+  border: 1px solid rgba(6, 182, 212, 0.38);
+}
+
+.progressive-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  padding: 6px 10px 8px 14px;
+  background: rgba(6, 182, 212, 0.08);
+  border-bottom: 1px solid rgba(6, 182, 212, 0.24);
+  flex-shrink: 0;
+}
+
+.prog-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.prog-action-btn:hover {
+  border-color: var(--accent-cyan-bright);
+  background: rgba(6, 182, 212, 0.18);
+}
+
+.prog-action-btn-active {
+  background: rgba(6, 182, 212, 0.24);
+  border-color: var(--accent-cyan-bright);
+  color: var(--accent-cyan-bright);
+}
+
+.prog-action-btn-clinical {
+  display: none;
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
 }
 
 .sidebar-footer {
@@ -509,6 +593,7 @@ body,
   justify-content: space-between;
   font-size: 11.5px;
   color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .link-btn {
@@ -1118,7 +1203,8 @@ body,
 .mobile-header-actions,
 .mobile-bottom-dock,
 .mobile-sheet-handle,
-.mobile-sheet-expand-btn {
+.mobile-sheet-expand-btn,
+.mobile-sidebar-sheet-header {
   display: none;
 }
 
@@ -1205,6 +1291,11 @@ body,
 }
 
 @media (max-width: 768px) {
+  /* 4. REMOVE NAVIGATION DUPLICATION: Hide top-left hamburger on < 768px */
+  .mobile-menu-btn {
+    display: none !important;
+  }
+
   /* 1. ULTRA-COMPACT MOBILE HEADER (~52px) */
   .top-navbar {
     height: 52px;
@@ -1287,17 +1378,44 @@ body,
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    width: 210px;
+    width: 245px;
     background: rgba(11, 18, 32, 0.98);
     backdrop-filter: blur(16px);
     border: 1px solid var(--border-highlight);
     border-radius: 12px;
-    padding: 6px;
+    padding: 8px;
     display: flex;
     flex-direction: column;
     gap: 2px;
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.78);
     z-index: 65;
+  }
+
+  .mobile-dropdown-section {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 4px 6px 6px;
+  }
+
+  .mobile-dropdown-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .mobile-dropdown-select {
+    width: 100%;
+    background: rgba(7, 11, 18, 0.88);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-size: 12px;
+    padding: 6px 8px;
+    border-radius: 7px;
+    outline: none;
   }
 
   .mobile-dropdown-item {
@@ -1357,7 +1475,7 @@ body,
     padding: 4px 6px;
     gap: 4px;
     position: relative;
-    z-index: 42;
+    z-index: 48;
   }
 
   .mobile-dock-btn {
@@ -1397,7 +1515,7 @@ body,
     flex-direction: column;
     gap: 8px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75);
-    z-index: 48;
+    z-index: 50;
   }
 
   .mobile-popover-header {
@@ -1450,7 +1568,170 @@ body,
     accent-color: var(--accent-cyan);
   }
 
-  /* 4. BOTTOM SHEET FOR SELECTED STRUCTURE (42vh default, 80vh expanded) */
+  /* 1B. TRANSFORM SIDEBAR INTO HALF-SCREEN BOTTOM SHEET (50dvh / 82dvh, NO BACKDROP) */
+  .mobile-sidebar-backdrop {
+    display: none !important;
+  }
+
+  .sidebar-panel {
+    position: absolute;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 50dvh;
+    max-height: 50dvh;
+    border-right: none;
+    border-top: 1px solid var(--border-highlight);
+    border-radius: 18px 18px 0 0;
+    background: rgba(10, 16, 29, 0.96);
+    backdrop-filter: blur(16px);
+    transform: translateY(105%);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+      height 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+      max-height 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0.24s ease;
+    z-index: 44;
+  }
+
+  .sidebar-open {
+    transform: translateY(0);
+    visibility: visible;
+    pointer-events: auto;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.72);
+  }
+
+  .sidebar-panel.sidebar-sheet-expanded {
+    height: 82dvh;
+    max-height: 82dvh;
+  }
+
+  .mobile-sidebar-sheet-header {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 7px 12px 6px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    flex-shrink: 0;
+  }
+
+  .mobile-sidebar-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .mobile-sidebar-sheet-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .mobile-active-count {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 99px;
+    background: rgba(6, 182, 212, 0.16);
+    color: var(--accent-cyan-bright);
+    border: 1px solid rgba(6, 182, 212, 0.32);
+  }
+
+  .mobile-sidebar-sheet-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .mobile-sheet-size-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 7px;
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid var(--border-subtle);
+    color: var(--accent-cyan-bright);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* 3B. STREAMLINE TOP & FOOTER OF MOBILE SYSTEMS SHEET */
+  .sidebar-dataset-row,
+  .sidebar-footer {
+    display: none !important;
+  }
+
+  .sidebar-header {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .sidebar-search-filter-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .search-box input {
+    padding: 6px 24px 6px 28px;
+    font-size: 12px;
+  }
+
+  .search-icon {
+    left: 8px;
+  }
+
+  .region-select {
+    padding: 6px 6px;
+    font-size: 11.5px;
+  }
+
+  .preset-chip {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  /* 2B. PROGRESSIVE DISCLOSURE IN TREE ROWS (Fitts's Law) */
+  .desktop-row-actions {
+    display: none !important;
+  }
+
+  .structure-row {
+    padding: 8px 10px 8px 12px;
+  }
+
+  .submesh-row {
+    padding: 6px 8px;
+  }
+
+  .row-visibility-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(30, 41, 59, 0.55);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+  }
+
+  .prog-action-btn-clinical {
+    display: inline-flex;
+  }
+
+  /* 4B. BOTTOM SHEET FOR SELECTED STRUCTURE (42vh default, 80vh expanded) */
+  .info-panel-suppressed-mobile {
+    display: none !important;
+  }
+
   .info-panel-has-selection {
     top: auto;
     left: 0;
@@ -1523,12 +1804,6 @@ body,
     font-weight: 600;
     cursor: pointer;
   }
-
-  /* 5. LEFT SIDEBAR DRAWER (85vw, max-width 340px) */
-  .sidebar-panel {
-    width: 85vw;
-    max-width: 340px;
-  }
 }
 
 
@@ -1537,6 +1812,14 @@ body,
   list-style: none;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+}
+
+.submesh-item-wrapper {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
 }
 
 .submesh-toggle-btn {
@@ -1549,6 +1832,7 @@ body,
   align-items: center;
   justify-content: center;
   transition: color 0.15s ease;
+  flex-shrink: 0;
 }
 
 .submesh-toggle-btn:hover {
@@ -1586,6 +1870,7 @@ body,
   border-radius: 6px;
   border: 1px solid transparent;
   transition: all 0.14s ease;
+  flex-shrink: 0;
 }
 
 .submesh-row:hover {
@@ -1611,6 +1896,9 @@ body,
 }
 
 .submesh-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-size: 11.5px;
   font-weight: 500;
   color: #e2e8f0;
