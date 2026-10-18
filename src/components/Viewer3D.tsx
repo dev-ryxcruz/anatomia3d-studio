@@ -102,23 +102,53 @@ function CameraController({
   cameraRequest: { preset: CameraPreset; timestamp: number } | null;
   focusCenter: [number, number, number] | null;
 }) {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   const controlsRef = useRef<any>(null);
   const targetPos = useRef<THREE.Vector3 | null>(null);
   const targetLookAt = useRef<THREE.Vector3 | null>(null);
+  const isMobilePortrait = size.width < 768;
+  const prevMobileRef = useRef<boolean | null>(null);
+
+  // Adjust FOV and initial framing when entering/leaving mobile (< 768px)
+  useEffect(() => {
+    const persp = camera as THREE.PerspectiveCamera;
+    if ('fov' in persp) {
+      const desiredFov = isMobilePortrait ? 48 : 40;
+      if (persp.fov !== desiredFov) {
+        persp.fov = desiredFov;
+        persp.updateProjectionMatrix();
+      }
+    }
+
+    if (prevMobileRef.current !== isMobilePortrait) {
+      prevMobileRef.current = isMobilePortrait;
+      const defaultY = isMobilePortrait ? 0.22 : 0.72;
+      const camY = isMobilePortrait ? 0.32 : 0.92;
+      const dist = isMobilePortrait ? 4.95 : 3.85;
+      camera.position.set(0, camY, dist);
+      if (controlsRef.current) {
+        controlsRef.current.target.set(0, defaultY, 0);
+        controlsRef.current.update();
+      }
+    }
+  }, [camera, isMobilePortrait]);
 
   useEffect(() => {
     if (!cameraRequest) return;
     const preset = cameraRequest.preset;
-    const defaultTarget = new THREE.Vector3(0, 0.72, 0);
+    const defaultY = isMobilePortrait ? 0.22 : 0.72;
+    const camY = isMobilePortrait ? 0.32 : 0.92;
+    const dist = isMobilePortrait ? 4.95 : 3.85;
+    const defaultTarget = new THREE.Vector3(0, defaultY, 0);
 
     if (preset === 'focus' && focusCenter) {
       const look = new THREE.Vector3(focusCenter[0], focusCenter[1], focusCenter[2]);
       targetLookAt.current = look;
+      const focusDist = isMobilePortrait ? 1.45 : 1.15;
       targetPos.current = new THREE.Vector3(
         focusCenter[0] + 0.28,
         focusCenter[1] + 0.16,
-        focusCenter[2] + 1.15
+        focusCenter[2] + focusDist
       );
       return;
     }
@@ -127,22 +157,22 @@ function CameraController({
     switch (preset) {
       case 'anterior':
       case 'reset':
-        targetPos.current = new THREE.Vector3(0, 0.92, 3.85);
+        targetPos.current = new THREE.Vector3(0, camY, dist);
         break;
       case 'posterior':
-        targetPos.current = new THREE.Vector3(0, 0.92, -3.85);
+        targetPos.current = new THREE.Vector3(0, camY, -dist);
         break;
       case 'left':
-        targetPos.current = new THREE.Vector3(3.85, 0.92, 0);
+        targetPos.current = new THREE.Vector3(dist, camY, 0);
         break;
       case 'right':
-        targetPos.current = new THREE.Vector3(-3.85, 0.92, 0);
+        targetPos.current = new THREE.Vector3(-dist, camY, 0);
         break;
       case 'superior':
-        targetPos.current = new THREE.Vector3(0, 4.45, 0.55);
+        targetPos.current = new THREE.Vector3(0, isMobilePortrait ? 5.2 : 4.45, 0.55);
         break;
     }
-  }, [cameraRequest, focusCenter]);
+  }, [cameraRequest, focusCenter, isMobilePortrait]);
 
   useFrame((_, delta) => {
     if (!targetPos.current || !targetLookAt.current || !controlsRef.current) return;
@@ -163,11 +193,11 @@ function CameraController({
   return (
     <OrbitControls
       ref={controlsRef}
-      target={[0, 0.72, 0]}
+      target={[0, isMobilePortrait ? 0.22 : 0.72, 0]}
       enableDamping
       dampingFactor={0.08}
       minDistance={0.35}
-      maxDistance={9.0}
+      maxDistance={10.5}
       maxPolarAngle={Math.PI * 0.94}
       makeDefault
     />
@@ -865,7 +895,16 @@ export const Viewer3D: React.FC<Viewer3DProps> = ({
         shadows
         dpr={[1, 2]}
         gl={{ preserveDrawingBuffer: true, antialias: true }}
-        camera={{ position: [0, 0.92, 3.85], fov: 40, near: 0.05, far: 50 }}
+        camera={{
+          position:
+            typeof window !== 'undefined' && window.innerWidth < 768
+              ? [0, 0.32, 4.95]
+              : [0, 0.92, 3.85],
+          fov:
+            typeof window !== 'undefined' && window.innerWidth < 768 ? 48 : 40,
+          near: 0.05,
+          far: 50,
+        }}
         onPointerMissed={() => onSelectStructure(null, null)}
       >
         <StudioEnvironment />

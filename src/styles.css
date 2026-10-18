@@ -39,6 +39,7 @@ body,
   flex-direction: column;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   background: radial-gradient(circle at 50% 35%, #111c2d 0%, #070b12 100%);
 }
 
@@ -53,10 +54,10 @@ body,
   background: rgba(10, 15, 26, 0.94);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-subtle);
-  z-index: 40;
+  z-index: 45;
   gap: 12px;
   flex-wrap: nowrap;
-  overflow: hidden;
+  position: relative;
 }
 
 .brand-group {
@@ -1113,6 +1114,20 @@ body,
   z-index: 45;
 }
 
+/* Desktop defaults for mobile-only elements */
+.mobile-header-actions,
+.mobile-bottom-dock,
+.mobile-sheet-handle,
+.mobile-sheet-expand-btn {
+  display: none;
+}
+
+.info-sticky-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 /* ==================== RESPONSIVE (XL, TABLET ~800px & MOBILE <768px) ==================== */
 @media (max-width: 1280px) {
   .brand-subtitle {
@@ -1123,15 +1138,17 @@ body,
 @media (max-width: 1100px) {
   .mobile-menu-btn {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .mobile-sidebar-backdrop {
     display: block;
     position: absolute;
     inset: 0;
-    background: rgba(3, 7, 18, 0.55);
-    backdrop-filter: blur(2px);
-    z-index: 33;
+    background: rgba(2, 6, 16, 0.65);
+    backdrop-filter: blur(3px);
+    z-index: 43;
   }
 
   .sidebar-panel {
@@ -1139,19 +1156,20 @@ body,
     top: 0;
     bottom: 0;
     left: 0;
-    width: min(310px, 88vw);
+    width: 85vw;
+    max-width: 340px;
     transform: translateX(-105%);
     visibility: hidden;
     pointer-events: none;
     transition: transform 0.22s ease, visibility 0.22s ease;
-    z-index: 36;
+    z-index: 44;
   }
 
   .sidebar-open {
     transform: translateX(0);
     visibility: visible;
     pointer-events: auto;
-    box-shadow: 12px 0 36px rgba(0, 0, 0, 0.7);
+    box-shadow: 14px 0 38px rgba(0, 0, 0, 0.78);
   }
 }
 
@@ -1187,44 +1205,329 @@ body,
 }
 
 @media (max-width: 768px) {
+  /* 1. ULTRA-COMPACT MOBILE HEADER (~52px) */
   .top-navbar {
-    height: 54px;
-    min-height: 54px;
-    padding: 0 10px;
+    height: 52px;
+    min-height: 52px;
+    padding: 0 12px;
     flex-direction: row;
     align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand-group {
+    gap: 8px;
+  }
+
+  .brand-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
   }
 
   .brand-title {
-    font-size: 14px;
+    font-size: 14.5px;
+    font-weight: 700;
   }
 
-  .pill-group-label span {
+  .brand-title-studio {
     display: none;
   }
 
+  /* Hide desktop horizontal scrolling top action bar on mobile */
+  .top-actions {
+    display: none !important;
+  }
+
+  .mobile-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .mobile-quiz-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .mobile-tools-wrapper {
+    position: relative;
+  }
+
+  .mobile-more-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+
+  .mobile-dropdown-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+  }
+
+  .mobile-tools-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 210px;
+    background: rgba(11, 18, 32, 0.98);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-highlight);
+    border-radius: 12px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.78);
+    z-index: 65;
+  }
+
+  .mobile-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .mobile-dropdown-item:active,
+  .mobile-dropdown-item:hover {
+    background: rgba(6, 182, 212, 0.16);
+  }
+
+  .mobile-dropdown-divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 4px 2px;
+  }
+
+  /* 2. FULL-SCREEN 3D VIEWPORT AREA (100dvh minus header and bottom dock) */
+  .workspace-grid {
+    flex: 1;
+    min-height: 0;
+    height: calc(100dvh - 52px - 58px);
+  }
+
+  .viewport-area {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Hide desktop floating bottom slice bar on mobile (replaced by unified bottom dock) */
+  .bottom-slice-bar {
+    display: none !important;
+  }
+
+  /* 3. UNIFIED MOBILE BOTTOM DOCK + POPOVERS */
+  .mobile-bottom-dock {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: center;
+    height: 58px;
+    min-height: 58px;
+    background: rgba(8, 13, 24, 0.96);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border-subtle);
+    padding: 4px 6px;
+    gap: 4px;
+    position: relative;
+    z-index: 42;
+  }
+
+  .mobile-dock-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 100%;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 10.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .mobile-dock-btn-active {
+    color: var(--accent-cyan-bright);
+    background: rgba(6, 182, 212, 0.16);
+    border-color: rgba(6, 182, 212, 0.4);
+  }
+
+  .mobile-dock-popover {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 10px;
+    right: 10px;
+    background: rgba(10, 16, 29, 0.96);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-highlight);
+    border-radius: 14px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75);
+    z-index: 48;
+  }
+
+  .mobile-popover-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .mobile-popover-header span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .mobile-popover-pills {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .mobile-popover-pills .btn-chip {
+    flex: 1;
+    min-width: 68px;
+    text-align: center;
+    padding: 6px 8px;
+    font-size: 12px;
+    background: rgba(30, 41, 59, 0.65);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .mobile-popover-pills .btn-chip-active {
+    background: rgba(6, 182, 212, 0.22);
+    border-color: var(--accent-cyan-bright);
+    color: var(--accent-cyan-bright);
+  }
+
+  .mobile-popover-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 2px;
+  }
+
+  .mobile-popover-slider-row input[type='range'] {
+    flex: 1;
+    accent-color: var(--accent-cyan);
+  }
+
+  /* 4. BOTTOM SHEET FOR SELECTED STRUCTURE (42vh default, 80vh expanded) */
   .info-panel-has-selection {
     top: auto;
     left: 0;
     right: 0;
     bottom: 0;
     width: 100%;
-    max-height: 56vh;
+    max-height: 42vh;
+    padding: 0 14px 14px;
     border-left: none;
     border-top: 1px solid var(--border-highlight);
-    border-radius: 16px 16px 0 0;
-    box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.75);
+    border-radius: 18px 18px 0 0;
+    background: rgba(10, 16, 29, 0.97);
+    box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.78);
+    z-index: 39;
+    transition: max-height 0.24s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .bottom-slice-bar {
-    bottom: 10px;
-    max-width: calc(100% - 16px);
-    padding: 5px 8px;
+  .info-panel-has-selection.info-panel-sheet-expanded {
+    max-height: 80vh;
+  }
+
+  .info-sticky-header {
+    position: sticky;
+    top: 0;
+    background: rgba(10, 16, 29, 0.98);
+    backdrop-filter: blur(12px);
+    padding: 8px 0 10px;
+    z-index: 5;
+    border-bottom: 1px solid var(--border-subtle);
+    gap: 7px;
+  }
+
+  .mobile-sheet-handle {
+    display: block;
+    width: 38px;
+    height: 4px;
+    border-radius: 99px;
+    background: rgba(148, 163, 184, 0.38);
+    margin: 0 auto 2px;
+    cursor: pointer;
+  }
+
+  .info-title {
+    font-size: 16.5px;
+    line-height: 1.2;
+  }
+
+  .info-latin {
+    font-size: 12px;
+    margin-top: -4px;
+  }
+
+  .dissect-btn {
+    padding: 6px 4px;
+    font-size: 10.5px;
+  }
+
+  .mobile-sheet-expand-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 6px;
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: rgba(6, 182, 212, 0.14);
+    border: 1px solid rgba(6, 182, 212, 0.35);
+    color: var(--accent-cyan-bright);
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
   }
 
-  .slice-bar-title span {
-    display: none;
+  /* 5. LEFT SIDEBAR DRAWER (85vw, max-width 340px) */
+  .sidebar-panel {
+    width: 85vw;
+    max-width: 340px;
   }
 }
 

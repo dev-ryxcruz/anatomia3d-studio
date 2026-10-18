@@ -27,6 +27,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   Compass,
   Crosshair,
   Database,
@@ -40,6 +41,7 @@ import {
   Info,
   Layers,
   Menu,
+  MoreVertical,
   RotateCcw,
   Scissors,
   Search,
@@ -57,7 +59,9 @@ export function App() {
   );
 
   // Selection & hover state (supports both Structure ID and individual GLB Sub-Mesh ID)
-  const [selectedId, setSelectedId] = useState<string | null>('heart');
+  const [selectedId, setSelectedId] = useState<string | null>(() =>
+    typeof window !== 'undefined' && window.innerWidth < 768 ? null : 'heart'
+  );
   const [selectedSubMeshId, setSelectedSubMeshId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hoveredSubMeshId, setHoveredSubMeshId] = useState<string | null>(null);
@@ -85,6 +89,11 @@ export function App() {
     () => new Set(['cranium', 'heart'])
   );
   const [sidebarOpenMobile, setSidebarOpenMobile] = useState(false);
+  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
+  const [mobileDockPopover, setMobileDockPopover] = useState<
+    'slice' | 'views' | null
+  >(null);
+  const [mobileSheetExpanded, setMobileSheetExpanded] = useState(false);
 
   // 3D Controls state: floating 3D labels disabled by default to avoid initial visual clutter
   const [showLabels, setShowLabels] = useState(false);
@@ -222,6 +231,17 @@ export function App() {
     });
   };
 
+  const focusOnStructure = (
+    targetStructureId: string,
+    targetSubMeshId: string | null = null
+  ) => {
+    setSelectedId(targetStructureId);
+    setSelectedSubMeshId(targetSubMeshId);
+    setMobileSheetExpanded(false);
+    setSidebarOpenMobile(false);
+    setTimeout(() => triggerCamera('focus'), 40);
+  };
+
   const isolateStructure = (targetStructureId: string) => {
     const allOtherIds = [
       ...ANATOMICAL_STRUCTURES.map((s) => s.id),
@@ -237,6 +257,8 @@ export function App() {
     });
     setSelectedId(targetStructureId);
     setSelectedSubMeshId(null);
+    setMobileSheetExpanded(false);
+    setSidebarOpenMobile(false);
     setTimeout(() => triggerCamera('focus'), 40);
   };
 
@@ -266,6 +288,8 @@ export function App() {
     });
     setSelectedId(parentStructureId);
     setSelectedSubMeshId(targetSubMeshId);
+    setMobileSheetExpanded(false);
+    setSidebarOpenMobile(false);
     setTimeout(() => triggerCamera('focus'), 40);
   };
 
@@ -315,6 +339,8 @@ export function App() {
   ) => {
     setSelectedId(structureId);
     setSelectedSubMeshId(subMeshId ?? null);
+    setMobileSheetExpanded(false);
+    setMobileDockPopover(null);
     if (structureId) {
       setExpandedStructures((prev) => new Set([...prev, structureId]));
     }
@@ -475,27 +501,41 @@ export function App() {
     <div className="app-shell">
       {/* ==================== TOP HEADER BAR ==================== */}
       <header className="top-navbar">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".glb,.gltf"
+          style={{ display: 'none' }}
+          onChange={handleFileUpload}
+        />
+
         <div className="brand-group">
           <button
             type="button"
             className="mobile-menu-btn"
-            onClick={() => setSidebarOpenMobile((v) => !v)}
+            onClick={() => {
+              setSidebarOpenMobile((v) => !v);
+              setMobileToolsOpen(false);
+              setMobileDockPopover(null);
+            }}
             aria-label="Alternar menu de sistemas"
           >
             <Menu size={20} />
           </button>
           <div className="brand-logo">
-            <Activity size={20} className="brand-icon" />
+            <Activity size={19} className="brand-icon" />
           </div>
           <div>
-            <h1 className="brand-title">Anatomia3D Studio</h1>
+            <h1 className="brand-title">
+              Anatomia3D<span className="brand-title-studio"> Studio</span>
+            </h1>
             <span className="brand-subtitle">
               Malhas 3D Reais (.GLB BodyParts3D) • Padrão TA98 / IFAA
             </span>
           </div>
         </div>
 
-        {/* Camera & Viewport Controls */}
+        {/* Desktop Camera & Viewport Controls (>= 768px) */}
         <div className="top-actions">
           <div
             className="action-pill-group"
@@ -567,13 +607,6 @@ export function App() {
             <span>{quizActive ? 'Sair do Quiz' : 'Modo Quiz'}</span>
           </button>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".glb,.gltf"
-            style={{ display: 'none' }}
-            onChange={handleFileUpload}
-          />
           <button
             type="button"
             className="btn-Action"
@@ -613,6 +646,95 @@ export function App() {
             <ShieldCheck size={15} />
             <span>Fontes & Licenças</span>
           </button>
+        </div>
+
+        {/* Ultra-Compact Mobile Header Actions (< 768px) */}
+        <div className="mobile-header-actions">
+          <button
+            type="button"
+            className={`mobile-quiz-btn ${quizActive ? 'btn-quiz-active' : ''}`}
+            onClick={() => {
+              setMobileToolsOpen(false);
+              quizActive ? stopQuiz() : startQuiz();
+            }}
+            title="Alternar Modo Quiz"
+          >
+            <Award size={15} />
+            <span>{quizActive ? 'Sair' : 'Quiz'}</span>
+          </button>
+
+          <div className="mobile-tools-wrapper">
+            <button
+              type="button"
+              className={`mobile-more-btn ${
+                mobileToolsOpen ? 'btn-active' : ''
+              }`}
+              onClick={() => {
+                setMobileToolsOpen((v) => !v);
+                setMobileDockPopover(null);
+              }}
+              aria-label="Mais ferramentas"
+              title="Mais / Ferramentas"
+            >
+              <MoreVertical size={18} />
+            </button>
+
+            {mobileToolsOpen && (
+              <>
+                <div
+                  className="mobile-dropdown-backdrop"
+                  onClick={() => setMobileToolsOpen(false)}
+                />
+                <div className="mobile-tools-dropdown" role="menu">
+                  <button
+                    type="button"
+                    className="mobile-dropdown-item"
+                    onClick={() => {
+                      setMobileToolsOpen(false);
+                      fileInputRef.current?.click();
+                    }}
+                  >
+                    <FileUp size={16} />
+                    <span>Importar .GLB</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-dropdown-item"
+                    onClick={() => {
+                      setMobileToolsOpen(false);
+                      handleDownloadScreenshot();
+                    }}
+                  >
+                    <Camera size={16} />
+                    <span>Capturar PNG</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile-dropdown-item"
+                    onClick={() => {
+                      setMobileToolsOpen(false);
+                      setShowLegalModal(true);
+                    }}
+                  >
+                    <ShieldCheck size={16} className="text-cyan" />
+                    <span>Fontes & Licenças</span>
+                  </button>
+                  <div className="mobile-dropdown-divider" />
+                  <button
+                    type="button"
+                    className="mobile-dropdown-item"
+                    onClick={() => {
+                      setMobileToolsOpen(false);
+                      resetAllVisibility();
+                    }}
+                  >
+                    <RotateCcw size={16} />
+                    <span>Resetar Cena</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -868,6 +990,14 @@ export function App() {
                               <div className="structure-row-actions">
                                 <button
                                   type="button"
+                                  className="icon-btn-sm"
+                                  onClick={() => focusOnStructure(st.id)}
+                                  title="Focar câmera nesta estrutura"
+                                >
+                                  <Focus size={13} />
+                                </button>
+                                <button
+                                  type="button"
                                   className={`icon-btn-sm ${
                                     isXray ? 'icon-btn-active' : ''
                                   }`}
@@ -954,6 +1084,16 @@ export function App() {
                                         </span>
                                       </button>
                                       <div className="structure-row-actions">
+                                        <button
+                                          type="button"
+                                          className="icon-btn-sm"
+                                          onClick={() =>
+                                            focusOnStructure(st.id, sm.id)
+                                          }
+                                          title="Focar câmera nesta sub-malha"
+                                        >
+                                          <Focus size={12} />
+                                        </button>
                                         <button
                                           type="button"
                                           className={`icon-btn-sm ${
@@ -1065,6 +1205,14 @@ export function App() {
                             </span>
                           </button>
                           <div className="structure-row-actions">
+                            <button
+                              type="button"
+                              className="icon-btn-sm"
+                              onClick={() => focusOnStructure(m.id)}
+                              title="Focar peça"
+                            >
+                              <Focus size={13} />
+                            </button>
                             <button
                               type="button"
                               className={`icon-btn-sm ${
@@ -1224,7 +1372,7 @@ export function App() {
             quizActive={quizActive}
           />
 
-          {/* Bottom Floating Cross-Section / Slice Control Bar */}
+          {/* Desktop Bottom Floating Cross-Section / Slice Control Bar (>= 768px) */}
           <div className="bottom-slice-bar">
             <div className="slice-bar-title">
               <Scissors size={15} className="text-cyan" />
@@ -1277,117 +1425,145 @@ export function App() {
           </div>
         </main>
 
-        {/* RIGHT PANEL: ANATOMICAL DETAILS, SUB-MESH INSPECTOR & DISSECTION ACTIONS */}
+        {/* RIGHT PANEL / MOBILE BOTTOM SHEET: ANATOMICAL DETAILS & DISSECTION ACTIONS */}
         <aside
           className={`info-panel ${
             selectedStructure || selectedImported
               ? 'info-panel-has-selection'
               : 'info-panel-empty-state'
-          }`}
+          } ${mobileSheetExpanded ? 'info-panel-sheet-expanded' : ''}`}
         >
           {selectedStructure ? (
             <div className="info-content">
-              <div className="info-badges">
-                <span
-                  className="system-pill"
-                  style={{
-                    backgroundColor:
+              <div className="info-sticky-header">
+                <div
+                  className="mobile-sheet-handle"
+                  onClick={() => setMobileSheetExpanded((v) => !v)}
+                />
+                <div className="info-badges">
+                  <span
+                    className="system-pill"
+                    style={{
+                      backgroundColor:
+                        ANATOMICAL_SYSTEMS.find(
+                          (s) => s.id === selectedStructure.system
+                        )?.color ?? '#38bdf8',
+                    }}
+                  >
+                    {
                       ANATOMICAL_SYSTEMS.find(
                         (s) => s.id === selectedStructure.system
-                      )?.color ?? '#38bdf8',
-                  }}
-                >
-                  {
-                    ANATOMICAL_SYSTEMS.find(
-                      (s) => s.id === selectedStructure.system
-                    )?.name
-                  }
-                </span>
-                <span className="ta98-pill">
-                  TA98: {selectedStructure.ta98Code}
-                </span>
-                <button
-                  type="button"
-                  className="info-close-btn"
-                  onClick={() => {
-                    setSelectedId(null);
-                    setSelectedSubMeshId(null);
-                  }}
-                  title="Fechar painel de informações"
-                  aria-label="Fechar painel de informações"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              <h2 className="info-title">{selectedStructure.name}</h2>
-              <p className="info-latin">{selectedStructure.latinName}</p>
-
-              {/* Dissection Action Buttons for Selected Structure */}
-              <div className="dissection-toolbar">
-                <button
-                  type="button"
-                  className="dissect-btn"
-                  onClick={() => triggerCamera('focus')}
-                >
-                  <Focus size={15} />
-                  <span>Focar</span>
-                </button>
-                <button
-                  type="button"
-                  className="dissect-btn"
-                  onClick={() =>
-                    selectedSubMesh
-                      ? isolateSubMesh(selectedStructure.id, selectedSubMesh.id)
-                      : isolateStructure(selectedStructure.id)
-                  }
-                >
-                  <Crosshair size={15} />
-                  <span>
-                    {selectedSubMesh ? 'Isolar Peça' : 'Isolar Grupo'}
+                      )?.name
+                    }
                   </span>
-                </button>
+                  <span className="ta98-pill">
+                    TA98: {selectedStructure.ta98Code}
+                  </span>
+                  <button
+                    type="button"
+                    className="info-close-btn"
+                    onClick={() => {
+                      setSelectedId(null);
+                      setSelectedSubMeshId(null);
+                      setMobileSheetExpanded(false);
+                    }}
+                    title="Fechar painel de informações"
+                    aria-label="Fechar painel de informações"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <h2 className="info-title">{selectedStructure.name}</h2>
+                <p className="info-latin">{selectedStructure.latinName}</p>
+
+                {/* Dissection Action Buttons for Selected Structure */}
+                <div className="dissection-toolbar">
+                  <button
+                    type="button"
+                    className="dissect-btn"
+                    onClick={() => {
+                      setSidebarOpenMobile(false);
+                      triggerCamera('focus');
+                    }}
+                  >
+                    <Focus size={15} />
+                    <span>Focar</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="dissect-btn"
+                    onClick={() =>
+                      selectedSubMesh
+                        ? isolateSubMesh(selectedStructure.id, selectedSubMesh.id)
+                        : isolateStructure(selectedStructure.id)
+                    }
+                  >
+                    <Crosshair size={15} />
+                    <span>
+                      {selectedSubMesh ? 'Isolar Peça' : 'Isolar'}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`dissect-btn ${
+                      xrayIds.has(selectedSubMesh?.id ?? selectedStructure.id)
+                        ? 'dissect-btn-active'
+                        : ''
+                    }`}
+                    onClick={() =>
+                      toggleStructureXray(
+                        selectedSubMesh?.id ?? selectedStructure.id
+                      )
+                    }
+                  >
+                    <Ghost size={15} />
+                    <span>Raio-X</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`dissect-btn ${
+                      hiddenIds.has(selectedSubMesh?.id ?? selectedStructure.id)
+                        ? 'dissect-btn-active'
+                        : ''
+                    }`}
+                    onClick={() =>
+                      toggleStructureHidden(
+                        selectedSubMesh?.id ?? selectedStructure.id
+                      )
+                    }
+                  >
+                    {hiddenIds.has(
+                      selectedSubMesh?.id ?? selectedStructure.id
+                    ) ? (
+                      <Eye size={15} />
+                    ) : (
+                      <EyeOff size={15} />
+                    )}
+                    <span>
+                      {hiddenIds.has(selectedSubMesh?.id ?? selectedStructure.id)
+                        ? 'Mostrar'
+                        : 'Ocultar'}
+                    </span>
+                  </button>
+                </div>
+
                 <button
                   type="button"
-                  className={`dissect-btn ${
-                    xrayIds.has(selectedSubMesh?.id ?? selectedStructure.id)
-                      ? 'dissect-btn-active'
-                      : ''
-                  }`}
-                  onClick={() =>
-                    toggleStructureXray(
-                      selectedSubMesh?.id ?? selectedStructure.id
-                    )
-                  }
+                  className="mobile-sheet-expand-btn"
+                  onClick={() => setMobileSheetExpanded((v) => !v)}
                 >
-                  <Ghost size={15} />
-                  <span>Raio-X</span>
-                </button>
-                <button
-                  type="button"
-                  className={`dissect-btn ${
-                    hiddenIds.has(selectedSubMesh?.id ?? selectedStructure.id)
-                      ? 'dissect-btn-active'
-                      : ''
-                  }`}
-                  onClick={() =>
-                    toggleStructureHidden(
-                      selectedSubMesh?.id ?? selectedStructure.id
-                    )
-                  }
-                >
-                  {hiddenIds.has(
-                    selectedSubMesh?.id ?? selectedStructure.id
-                  ) ? (
-                    <Eye size={15} />
+                  {mobileSheetExpanded ? (
+                    <>
+                      <ChevronDown size={15} />
+                      <span>Recolher detalhes</span>
+                    </>
                   ) : (
-                    <EyeOff size={15} />
+                    <>
+                      <ChevronUp size={15} />
+                      <span>Expandir / Ver detalhes clínicos</span>
+                    </>
                   )}
-                  <span>
-                    {hiddenIds.has(selectedSubMesh?.id ?? selectedStructure.id)
-                      ? 'Mostrar'
-                      : 'Ocultar'}
-                  </span>
                 </button>
               </div>
 
@@ -1484,63 +1660,91 @@ export function App() {
             </div>
           ) : selectedImported ? (
             <div className="info-content">
-              <div className="info-badges">
-                <span
-                  className="system-pill"
-                  style={{ backgroundColor: '#38bdf8' }}
-                >
-                  Malha .GLB / .GLTF Inspecionada
-                </span>
-                <button
-                  type="button"
-                  className="info-close-btn"
-                  onClick={() => {
-                    setSelectedId(null);
-                    setSelectedSubMeshId(null);
-                  }}
-                  title="Fechar painel de informações"
-                  aria-label="Fechar painel de informações"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <h2 className="info-title">{selectedImported.name}</h2>
-              <p className="info-latin">
-                Sub-malha 3D mapeada via Raycasting
-              </p>
+              <div className="info-sticky-header">
+                <div
+                  className="mobile-sheet-handle"
+                  onClick={() => setMobileSheetExpanded((v) => !v)}
+                />
+                <div className="info-badges">
+                  <span
+                    className="system-pill"
+                    style={{ backgroundColor: '#38bdf8' }}
+                  >
+                    Malha .GLB / .GLTF Inspecionada
+                  </span>
+                  <button
+                    type="button"
+                    className="info-close-btn"
+                    onClick={() => {
+                      setSelectedId(null);
+                      setSelectedSubMeshId(null);
+                      setMobileSheetExpanded(false);
+                    }}
+                    title="Fechar painel de informações"
+                    aria-label="Fechar painel de informações"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <h2 className="info-title">{selectedImported.name}</h2>
+                <p className="info-latin">
+                  Sub-malha 3D mapeada via Raycasting
+                </p>
 
-              <div className="dissection-toolbar">
+                <div className="dissection-toolbar">
+                  <button
+                    type="button"
+                    className="dissect-btn"
+                    onClick={() => {
+                      setSidebarOpenMobile(false);
+                      triggerCamera('focus');
+                    }}
+                  >
+                    <Focus size={15} />
+                    <span>Focar</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="dissect-btn"
+                    onClick={() => isolateStructure(selectedImported.id)}
+                  >
+                    <Crosshair size={15} />
+                    <span>Isolar</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="dissect-btn"
+                    onClick={() => toggleStructureXray(selectedImported.id)}
+                  >
+                    <Ghost size={15} />
+                    <span>Raio-X</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="dissect-btn"
+                    onClick={() => toggleStructureHidden(selectedImported.id)}
+                  >
+                    <EyeOff size={15} />
+                    <span>Ocultar</span>
+                  </button>
+                </div>
+
                 <button
                   type="button"
-                  className="dissect-btn"
-                  onClick={() => triggerCamera('focus')}
+                  className="mobile-sheet-expand-btn"
+                  onClick={() => setMobileSheetExpanded((v) => !v)}
                 >
-                  <Focus size={15} />
-                  <span>Focar</span>
-                </button>
-                <button
-                  type="button"
-                  className="dissect-btn"
-                  onClick={() => isolateStructure(selectedImported.id)}
-                >
-                  <Crosshair size={15} />
-                  <span>Isolar</span>
-                </button>
-                <button
-                  type="button"
-                  className="dissect-btn"
-                  onClick={() => toggleStructureXray(selectedImported.id)}
-                >
-                  <Ghost size={15} />
-                  <span>Raio-X</span>
-                </button>
-                <button
-                  type="button"
-                  className="dissect-btn"
-                  onClick={() => toggleStructureHidden(selectedImported.id)}
-                >
-                  <EyeOff size={15} />
-                  <span>Ocultar</span>
+                  {mobileSheetExpanded ? (
+                    <>
+                      <ChevronDown size={15} />
+                      <span>Recolher detalhes</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronUp size={15} />
+                      <span>Expandir / Ver detalhes clínicos</span>
+                    </>
+                  )}
                 </button>
               </div>
 
@@ -1600,6 +1804,199 @@ export function App() {
           )}
         </aside>
       </div>
+
+      {/* ==================== UNIFIED MOBILE BOTTOM DOCK (< 768px) ==================== */}
+      <nav className="mobile-bottom-dock" aria-label="Controles 3D Mobile">
+        {/* Popover: Plano de Corte */}
+        {mobileDockPopover === 'slice' && (
+          <div className="mobile-dock-popover" role="dialog" aria-label="Plano de Corte">
+            <div className="mobile-popover-header">
+              <span>
+                <Scissors size={14} className="text-cyan" /> Plano de Corte Anatômico
+              </span>
+              <button
+                type="button"
+                className="icon-btn-sm"
+                onClick={() => setMobileDockPopover(null)}
+              >
+                <X size={15} />
+              </button>
+            </div>
+            <div className="mobile-popover-pills">
+              {(
+                [
+                  { id: 'none', label: 'Desativado' },
+                  { id: 'axial', label: 'Axial' },
+                  { id: 'sagittal', label: 'Sagital' },
+                  { id: 'coronal', label: 'Coronal' },
+                ] as { id: SliceAxis; label: string }[]
+              ).map((ax) => (
+                <button
+                  key={ax.id}
+                  type="button"
+                  className={`btn-chip ${
+                    sliceAxis === ax.id ? 'btn-chip-active' : ''
+                  }`}
+                  onClick={() => handleAxisChange(ax.id)}
+                >
+                  {ax.label}
+                </button>
+              ))}
+            </div>
+            {sliceAxis !== 'none' && (
+              <div className="mobile-popover-slider-row">
+                <input
+                  type="range"
+                  min={sliceAxis === 'axial' ? -1.55 : -0.85}
+                  max={sliceAxis === 'axial' ? 2.6 : 0.85}
+                  step={0.02}
+                  value={sliceOffset}
+                  onChange={(e) => setSliceOffset(parseFloat(e.target.value))}
+                  aria-label="Posição do plano de corte"
+                />
+                <button
+                  type="button"
+                  className="btn-chip"
+                  onClick={() => setSliceInvert((v) => !v)}
+                >
+                  Inverter
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Popover: Vistas Rápidas */}
+        {mobileDockPopover === 'views' && (
+          <div className="mobile-dock-popover" role="dialog" aria-label="Vistas da Câmera">
+            <div className="mobile-popover-header">
+              <span>
+                <Compass size={14} className="text-cyan" /> Vistas Anatômicas
+              </span>
+              <button
+                type="button"
+                className="icon-btn-sm"
+                onClick={() => setMobileDockPopover(null)}
+              >
+                <X size={15} />
+              </button>
+            </div>
+            <div className="mobile-popover-pills">
+              <button
+                type="button"
+                className="btn-chip"
+                onClick={() => {
+                  triggerCamera('anterior');
+                  setMobileDockPopover(null);
+                }}
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                className="btn-chip"
+                onClick={() => {
+                  triggerCamera('posterior');
+                  setMobileDockPopover(null);
+                }}
+              >
+                Posterior
+              </button>
+              <button
+                type="button"
+                className="btn-chip"
+                onClick={() => {
+                  triggerCamera('right');
+                  setMobileDockPopover(null);
+                }}
+              >
+                Lateral
+              </button>
+              <button
+                type="button"
+                className="btn-chip"
+                onClick={() => {
+                  triggerCamera('superior');
+                  setMobileDockPopover(null);
+                }}
+              >
+                Superior
+              </button>
+              <button
+                type="button"
+                className="btn-chip"
+                onClick={() => {
+                  triggerCamera('reset');
+                  setMobileDockPopover(null);
+                }}
+              >
+                Resetar
+              </button>
+            </div>
+          </div>
+        )}
+
+        <button
+          type="button"
+          className={`mobile-dock-btn ${
+            sidebarOpenMobile ? 'mobile-dock-btn-active' : ''
+          }`}
+          onClick={() => {
+            setMobileDockPopover(null);
+            setMobileToolsOpen(false);
+            setSidebarOpenMobile((v) => !v);
+          }}
+        >
+          <Search size={18} />
+          <span>Sistemas/Busca</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-dock-btn ${
+            mobileDockPopover === 'slice' || sliceAxis !== 'none'
+              ? 'mobile-dock-btn-active'
+              : ''
+          }`}
+          onClick={() => {
+            setSidebarOpenMobile(false);
+            setMobileToolsOpen(false);
+            setMobileDockPopover((v) => (v === 'slice' ? null : 'slice'));
+          }}
+        >
+          <Scissors size={18} />
+          <span>Plano de Corte</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-dock-btn ${
+            mobileDockPopover === 'views' ? 'mobile-dock-btn-active' : ''
+          }`}
+          onClick={() => {
+            setSidebarOpenMobile(false);
+            setMobileToolsOpen(false);
+            setMobileDockPopover((v) => (v === 'views' ? null : 'views'));
+          }}
+        >
+          <Compass size={18} />
+          <span>Vistas</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-dock-btn ${
+            showLabels ? 'mobile-dock-btn-active' : ''
+          }`}
+          onClick={() => {
+            setMobileDockPopover(null);
+            setShowLabels((v) => !v);
+          }}
+        >
+          <Tag size={18} />
+          <span>Etiquetas 3D</span>
+        </button>
+      </nav>
 
       {/* ==================== MODAL: LEGAL SOURCES & LICENSES ==================== */}
       {showLegalModal && (
