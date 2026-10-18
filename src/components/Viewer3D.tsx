@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
-import { OrbitControls, Html, ContactShadows, Grid } from '@react-three/drei';
+import { OrbitControls, Html, ContactShadows, Grid, Bvh } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
@@ -60,6 +60,7 @@ interface Viewer3DProps {
   sliceAxis: SliceAxis;
   sliceOffset: number;
   sliceInvert: boolean;
+  explodeFactor?: number;
   cameraRequest: { preset: CameraPreset; timestamp: number } | null;
   importedMeshes: ImportedMeshItem[];
   onSelectStructure: (structureId: string | null, subMeshId?: string | null) => void;
@@ -363,6 +364,44 @@ function getSubMeshMaterialProps(
   }
 }
 
+function computeSubMeshExplodeOffset(
+  itemCenter: [number, number, number],
+  originCenter: [number, number, number],
+  index: number,
+  totalCount: number,
+  explodeFactor: number,
+  maxDisplacement = 0.42
+): [number, number, number] {
+  if (!explodeFactor || explodeFactor <= 0.001) return [0, 0, 0];
+
+  let dx = itemCenter[0] - originCenter[0];
+  let dy = itemCenter[1] - originCenter[1];
+  let dz = itemCenter[2] - originCenter[2];
+  const dist = Math.hypot(dx, dy, dz);
+
+  // If sub-mesh center coincides closely with parent structure center (e.g. internal heart valves / ventricles),
+  // spread deterministically along a golden-ratio spherical direction so inner layers separate cleanly.
+  if (dist < 0.045) {
+    if (totalCount <= 1) return [0, 0, 0];
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+    const theta = goldenAngle * (index + 1);
+    const z = 1 - ((2 * (index + 0.5)) / Math.max(totalCount, 2));
+    const radius = Math.sqrt(Math.max(0, 1 - z * z));
+    dx = Math.cos(theta) * radius;
+    dy = z * 0.65;
+    dz = Math.sin(theta) * radius + 0.25;
+  } else {
+    dx /= dist;
+    dy /= dist;
+    dz /= dist;
+  }
+
+  // Scale displacement smoothly by explodeFactor (0..1)
+  const radialBoost = Math.min(1.35, Math.max(0.55, dist * 2.2 + 0.65));
+  const amount = explodeFactor * maxDisplacement * radialBoost;
+  return [dx * amount, dy * amount, dz * amount];
+}
+
 function AtlasStructureGroup({
   structure,
   subMeshes,
@@ -376,6 +415,7 @@ function AtlasStructureGroup({
   clippingPlanes,
   showLabels,
   quizActive,
+  explodeFactor,
   onSelect,
   onHover,
 }: {
@@ -391,6 +431,7 @@ function AtlasStructureGroup({
   clippingPlanes: THREE.Plane[];
   showLabels: boolean;
   quizActive: boolean;
+  explodeFactor: number;
   onSelect: (structureId: string, subMeshId: string) => void;
   onHover: (structureId: string | null, subMeshId?: string | null) => void;
 }) {
@@ -410,6 +451,14 @@ function AtlasStructureGroup({
   const isStructHovered = hoveredId === structure.id;
   const isStructXray = xrayIds.has(structure.id) || isSystemXray;
 
+  // Apply exploded view to the selected structure's sub-meshes (or to all structures when no specific structure is selected)
+  const effectiveExplode =
+    explodeFactor > 0 && (!selectedId || isStructSelected) ? explodeFactor : 0;
+
+  const explodeOrigin: [number, number, number] = isStructSelected
+    ? structure.center
+    : [0, structure.center[1], 0];
+
   // Floating 3D label logic:
   // By default (showLabels=false), only display the 3D pin on the selected or hovered structure/sub-mesh!
   // When showLabels=true, display pins on all non-xray structures.
@@ -417,20 +466,45 @@ function AtlasStructureGroup({
     !quizActive &&
     ((showLabels && !isStructXray) || isStructSelected || isStructHovered);
 
+  const activeSubMeshIdx = visibleSubMeshes.findIndex(
+    (sm) => sm.id === hoveredSubMeshId || sm.id === selectedSubMeshId
+  );
   const activeSubMesh =
-    visibleSubMeshes.find((sm) => sm.id === hoveredSubMeshId) ??
-    visibleSubMeshes.find((sm) => sm.id === selectedSubMeshId) ??
-    null;
+    activeSubMeshIdx >= 0 ? visibleSubMeshes[activeSubMeshIdx] : null;
 
-  const pinPosition: [number, number, number] = activeSubMesh
+  const activePinOffset = activeSubMesh
+    ? computeSubMeshExplodeOffset(
+        activeSubMesh.worldCenter,
+        explodeOrigin,
+        activeSubMeshIdx,
+        visibleSubMeshes.length,
+        effectiveExplode,
+        isStructSelected ? 0.38 : 0.55
+      )
+    : computeSubMeshExplodeOffset(
+        structure.center,
+        [0, structure.center[1], 0],
+        0,
+        2,
+        effectiveExplode,
+        0.55
+      );
+
+  const basePinPos: [number, number, number] = activeSubMesh
     ? activeSubMesh.worldCenter
     : structure.labelOffset;
+
+  const pinPosition: [number, number, number] = [
+    basePinPos[0] + activePinOffset[0],
+    basePinPos[1] + activePinOffset[1],
+    basePinPos[2] + activePinOffset[2],
+  ];
 
   const pinTitle = activeSubMesh ? activeSubMesh.name : structure.name;
 
   return (
     <group name={structure.id}>
-      {visibleSubMeshes.map((sm) => {
+      {visibleSubMeshes.map((sm, idx) => {
         const isSmSelected =
           selectedSubMeshId === sm.id ||
           (isStructSelected && !selectedSubMeshId);
@@ -456,11 +530,21 @@ function AtlasStructureGroup({
           : '#000000';
         const emissiveIntensity = isSmSelected ? 0.42 : isSmHovered ? 0.24 : 0;
 
+        const smOffset = computeSubMeshExplodeOffset(
+          sm.worldCenter,
+          explodeOrigin,
+          idx,
+          visibleSubMeshes.length,
+          effectiveExplode,
+          isStructSelected ? 0.38 : 0.55
+        );
+
         return (
           <mesh
             key={sm.id}
             name={sm.id}
             geometry={sm.geometry}
+            position={smOffset}
             onClick={(e: ThreeEvent<MouseEvent>) => {
               e.stopPropagation();
               onSelect(structure.id, sm.id);
@@ -536,6 +620,10 @@ function AtlasStructureGroup({
 
 function ImportedMeshNode({
   item,
+  index,
+  totalCount,
+  groupCenter,
+  explodeFactor,
   isSelected,
   isHovered,
   isXray,
@@ -545,6 +633,10 @@ function ImportedMeshNode({
   onHover,
 }: {
   item: ImportedMeshItem;
+  index: number;
+  totalCount: number;
+  groupCenter: [number, number, number];
+  explodeFactor: number;
   isSelected: boolean;
   isHovered: boolean;
   isXray: boolean;
@@ -576,8 +668,17 @@ function ImportedMeshNode({
 
   const shouldShowPin = (showLabels && !isXray) || isSelected || isHovered;
 
+  const explodeOffset = computeSubMeshExplodeOffset(
+    item.worldCenter,
+    groupCenter,
+    index,
+    totalCount,
+    explodeFactor,
+    0.45
+  );
+
   return (
-    <group>
+    <group position={explodeOffset}>
       <mesh
         geometry={item.geometry}
         matrixAutoUpdate={false}
@@ -703,6 +804,7 @@ export const Viewer3D: React.FC<Viewer3DProps> = ({
   sliceAxis,
   sliceOffset,
   sliceInvert,
+  explodeFactor = 0,
   cameraRequest,
   importedMeshes,
   onSelectStructure,
@@ -883,6 +985,20 @@ export const Viewer3D: React.FC<Viewer3DProps> = ({
     [standaloneOrganMeshes, importedMeshes, hiddenIds]
   );
 
+  const importedGroupCenter = useMemo<[number, number, number]>(() => {
+    if (allStandaloneAndImported.length === 0) return [0, 0.85, 0];
+    let sx = 0,
+      sy = 0,
+      sz = 0;
+    for (const it of allStandaloneAndImported) {
+      sx += it.worldCenter[0];
+      sy += it.worldCenter[1];
+      sz += it.worldCenter[2];
+    }
+    const n = allStandaloneAndImported.length;
+    return [sx / n, sy / n, sz / n];
+  }, [allStandaloneAndImported]);
+
   return (
     <div className="viewer-canvas-wrapper">
       {loadingGlb && (
@@ -943,53 +1059,61 @@ export const Viewer3D: React.FC<Viewer3DProps> = ({
           focusCenter={focusCenter}
         />
 
-        {/* Real Anatomical Atlas Sub-Meshes (.GLB) */}
-        {isFullAtlas && (
-          <group>
-            {visibleStructures.map((structure) => {
-              const smList = subMeshesByStructure.get(structure.id) ?? [];
-              if (smList.length === 0) return null;
-              return (
-                <AtlasStructureGroup
-                  key={structure.id}
-                  structure={structure}
-                  subMeshes={smList}
-                  selectedId={selectedId}
-                  selectedSubMeshId={selectedSubMeshId}
-                  hoveredId={hoveredId}
-                  hoveredSubMeshId={hoveredSubMeshId}
-                  hiddenIds={hiddenIds}
-                  xrayIds={xrayIds}
-                  isSystemXray={xraySystems.has(structure.system)}
+        {/* Accelerated BVH Raycasting across all 102 anatomical sub-meshes */}
+        <Bvh firstHitOnly>
+          {/* Real Anatomical Atlas Sub-Meshes (.GLB) */}
+          {isFullAtlas && (
+            <group>
+              {visibleStructures.map((structure) => {
+                const smList = subMeshesByStructure.get(structure.id) ?? [];
+                if (smList.length === 0) return null;
+                return (
+                  <AtlasStructureGroup
+                    key={structure.id}
+                    structure={structure}
+                    subMeshes={smList}
+                    selectedId={selectedId}
+                    selectedSubMeshId={selectedSubMeshId}
+                    hoveredId={hoveredId}
+                    hoveredSubMeshId={hoveredSubMeshId}
+                    hiddenIds={hiddenIds}
+                    xrayIds={xrayIds}
+                    isSystemXray={xraySystems.has(structure.system)}
+                    clippingPlanes={clippingPlanes}
+                    showLabels={showLabels}
+                    quizActive={quizActive}
+                    explodeFactor={explodeFactor}
+                    onSelect={(stId, smId) => onSelectStructure(stId, smId)}
+                    onHover={(stId, smId) => onHoverStructure(stId, smId)}
+                  />
+                );
+              })}
+            </group>
+          )}
+
+          {/* Standalone High-Res Organ GLB or User-Imported GLB Meshes */}
+          {allStandaloneAndImported.length > 0 && (
+            <group>
+              {allStandaloneAndImported.map((item, idx) => (
+                <ImportedMeshNode
+                  key={item.id}
+                  item={item}
+                  index={idx}
+                  totalCount={allStandaloneAndImported.length}
+                  groupCenter={importedGroupCenter}
+                  explodeFactor={explodeFactor}
+                  isSelected={selectedId === item.id}
+                  isHovered={hoveredId === item.id}
+                  isXray={xrayIds.has(item.id)}
                   clippingPlanes={clippingPlanes}
                   showLabels={showLabels}
-                  quizActive={quizActive}
-                  onSelect={(stId, smId) => onSelectStructure(stId, smId)}
-                  onHover={(stId, smId) => onHoverStructure(stId, smId)}
+                  onSelect={(id) => onSelectStructure(id, null)}
+                  onHover={(id) => onHoverStructure(id, null)}
                 />
-              );
-            })}
-          </group>
-        )}
-
-        {/* Standalone High-Res Organ GLB or User-Imported GLB Meshes */}
-        {allStandaloneAndImported.length > 0 && (
-          <group>
-            {allStandaloneAndImported.map((item) => (
-              <ImportedMeshNode
-                key={item.id}
-                item={item}
-                isSelected={selectedId === item.id}
-                isHovered={hoveredId === item.id}
-                isXray={xrayIds.has(item.id)}
-                clippingPlanes={clippingPlanes}
-                showLabels={showLabels}
-                onSelect={(id) => onSelectStructure(id, null)}
-                onHover={(id) => onHoverStructure(id, null)}
-              />
-            ))}
-          </group>
-        )}
+              ))}
+            </group>
+          )}
+        </Bvh>
 
         <SlicePlaneIndicator sliceAxis={sliceAxis} sliceOffset={sliceOffset} />
 

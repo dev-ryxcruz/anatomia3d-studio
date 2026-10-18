@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import {
@@ -24,6 +24,7 @@ import {
   BookOpen,
   Box,
   Camera,
+  Check,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
@@ -32,6 +33,7 @@ import {
   Crosshair,
   Database,
   Download,
+  Expand,
   Eye,
   EyeOff,
   FileUp,
@@ -42,27 +44,103 @@ import {
   Layers,
   Menu,
   MoreVertical,
+  Redo2,
   RotateCcw,
   Scissors,
   Search,
+  Share2,
   ShieldCheck,
   Sparkles,
   Tag,
+  Undo2,
   X,
   XCircle,
 } from 'lucide-react';
 
+interface DissectionSnapshot {
+  selectedId: string | null;
+  selectedSubMeshId: string | null;
+  hiddenIds: string[];
+  xrayIds: string[];
+  hiddenSystems: SystemId[];
+  xraySystems: SystemId[];
+}
+
+function normalizeSearchText(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function parseInitialUrlParams() {
+  if (typeof window === 'undefined') {
+    return {
+      part: 'heart' as string | null,
+      sub: null as string | null,
+      xray: [] as string[],
+      xsys: [] as SystemId[],
+      hidden: [] as string[],
+      hsys: [] as SystemId[],
+      slice: 'none' as SliceAxis,
+      offset: 1.25,
+      explode: 0,
+    };
+  }
+  const params = new URLSearchParams(window.location.search);
+  const partParam = params.get('part');
+  const defaultPart = window.innerWidth < 768 ? null : 'heart';
+  const part =
+    partParam === 'none'
+      ? null
+      : partParam && ANATOMICAL_STRUCTURES.some((s) => s.id === partParam)
+      ? partParam
+      : defaultPart;
+
+  const sub = params.get('sub') || null;
+  const xray = (params.get('xray') || '').split(',').filter(Boolean);
+  const xsys = (params.get('xsys') || '')
+    .split(',')
+    .filter((s): s is SystemId =>
+      ANATOMICAL_SYSTEMS.some((sys) => sys.id === s)
+    );
+  const hidden = (params.get('hidden') || '').split(',').filter(Boolean);
+  const hsys = (params.get('hsys') || '')
+    .split(',')
+    .filter((s): s is SystemId =>
+      ANATOMICAL_SYSTEMS.some((sys) => sys.id === s)
+    );
+
+  const rawSlice = params.get('slice');
+  const slice: SliceAxis =
+    rawSlice === 'axial' || rawSlice === 'sagittal' || rawSlice === 'coronal'
+      ? rawSlice
+      : 'none';
+  const rawOffset = parseFloat(params.get('offset') || '');
+  const offset = Number.isFinite(rawOffset) ? rawOffset : 1.25;
+  const rawExplode = parseFloat(params.get('explode') || '');
+  const explode = Number.isFinite(rawExplode)
+    ? Math.max(0, Math.min(1, rawExplode / 100))
+    : 0;
+
+  return { part, sub, xray, xsys, hidden, hsys, slice, offset, explode };
+}
+
 export function App() {
+  const initialUrlState = useMemo(() => parseInitialUrlParams(), []);
+
   // Active built-in GLB model from public/models/
   const [activeGlbUrl, setActiveGlbUrl] = useState<string>(
     BUILTIN_GLB_MODELS[0].url
   );
 
   // Selection & hover state (supports both Structure ID and individual GLB Sub-Mesh ID)
-  const [selectedId, setSelectedId] = useState<string | null>(() =>
-    typeof window !== 'undefined' && window.innerWidth < 768 ? null : 'heart'
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialUrlState.part
   );
-  const [selectedSubMeshId, setSelectedSubMeshId] = useState<string | null>(null);
+  const [selectedSubMeshId, setSelectedSubMeshId] = useState<string | null>(
+    initialUrlState.sub
+  );
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hoveredSubMeshId, setHoveredSubMeshId] = useState<string | null>(null);
 
@@ -70,12 +148,156 @@ export function App() {
   const [atlasSubMeshes, setAtlasSubMeshes] = useState<GlbSubMeshItem[]>([]);
 
   // Visibility & X-ray state (stores both structure IDs and sub-mesh IDs)
-  const [hiddenIds, setHiddenIds] = useState<Set<string>>(() => new Set());
-  const [xrayIds, setXrayIds] = useState<Set<string>>(() => new Set());
-  const [hiddenSystems, setHiddenSystems] = useState<Set<SystemId>>(
-    () => new Set()
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(
+    () => new Set(initialUrlState.hidden)
   );
-  const [xraySystems, setXraySystems] = useState<Set<SystemId>>(() => new Set());
+  const [xrayIds, setXrayIds] = useState<Set<string>>(
+    () => new Set(initialUrlState.xray)
+  );
+  const [hiddenSystems, setHiddenSystems] = useState<Set<SystemId>>(
+    () => new Set(initialUrlState.hsys)
+  );
+  const [xraySystems, setXraySystems] = useState<Set<SystemId>>(
+    () => new Set(initialUrlState.xsys)
+  );
+
+  // 3D Exploded View state (0 = 0%, 1 = 100%)
+  const [explodeFactor, setExplodeFactor] = useState<number>(
+    initialUrlState.explode
+  );
+
+  // Share link feedback state
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  // Dissection Undo / Redo History Stack
+  const [historyState, setHistoryState] = useState<{
+    stack: DissectionSnapshot[];
+    index: number;
+  }>(() => ({
+    stack: [
+      {
+        selectedId: initialUrlState.part,
+        selectedSubMeshId: initialUrlState.sub,
+        hiddenIds: initialUrlState.hidden,
+        xrayIds: initialUrlState.xray,
+        hiddenSystems: initialUrlState.hsys,
+        xraySystems: initialUrlState.xsys,
+      },
+    ],
+    index: 0,
+  }));
+  const isRestoringHistoryRef = useRef(false);
+
+  // Record dissection changes into history stack
+  useEffect(() => {
+    if (isRestoringHistoryRef.current) {
+      isRestoringHistoryRef.current = false;
+      return;
+    }
+    const snapshot: DissectionSnapshot = {
+      selectedId,
+      selectedSubMeshId,
+      hiddenIds: Array.from(hiddenIds).sort(),
+      xrayIds: Array.from(xrayIds).sort(),
+      hiddenSystems: Array.from(hiddenSystems).sort(),
+      xraySystems: Array.from(xraySystems).sort(),
+    };
+
+    setHistoryState((prev) => {
+      const current = prev.stack[prev.index];
+      if (
+        current &&
+        current.selectedId === snapshot.selectedId &&
+        current.selectedSubMeshId === snapshot.selectedSubMeshId &&
+        current.hiddenIds.join(',') === snapshot.hiddenIds.join(',') &&
+        current.xrayIds.join(',') === snapshot.xrayIds.join(',') &&
+        current.hiddenSystems.join(',') === snapshot.hiddenSystems.join(',') &&
+        current.xraySystems.join(',') === snapshot.xraySystems.join(',')
+      ) {
+        return prev;
+      }
+      const nextStack = prev.stack.slice(0, prev.index + 1);
+      nextStack.push(snapshot);
+      if (nextStack.length > 50) {
+        nextStack.shift();
+      }
+      return {
+        stack: nextStack,
+        index: nextStack.length - 1,
+      };
+    });
+  }, [
+    selectedId,
+    selectedSubMeshId,
+    hiddenIds,
+    xrayIds,
+    hiddenSystems,
+    xraySystems,
+  ]);
+
+  const canUndo = historyState.index > 0;
+  const canRedo = historyState.index < historyState.stack.length - 1;
+
+  const handleUndo = useCallback(() => {
+    setHistoryState((prev) => {
+      if (prev.index <= 0) return prev;
+      const targetIdx = prev.index - 1;
+      const snap = prev.stack[targetIdx];
+      isRestoringHistoryRef.current = true;
+      setSelectedId(snap.selectedId);
+      setSelectedSubMeshId(snap.selectedSubMeshId);
+      setHiddenIds(new Set(snap.hiddenIds));
+      setXrayIds(new Set(snap.xrayIds));
+      setHiddenSystems(new Set(snap.hiddenSystems));
+      setXraySystems(new Set(snap.xraySystems));
+      return { ...prev, index: targetIdx };
+    });
+  }, []);
+
+  const handleRedo = useCallback(() => {
+    setHistoryState((prev) => {
+      if (prev.index >= prev.stack.length - 1) return prev;
+      const targetIdx = prev.index + 1;
+      const snap = prev.stack[targetIdx];
+      isRestoringHistoryRef.current = true;
+      setSelectedId(snap.selectedId);
+      setSelectedSubMeshId(snap.selectedSubMeshId);
+      setHiddenIds(new Set(snap.hiddenIds));
+      setXrayIds(new Set(snap.xrayIds));
+      setHiddenSystems(new Set(snap.hiddenSystems));
+      setXraySystems(new Set(snap.xraySystems));
+      return { ...prev, index: targetIdx };
+    });
+  }, []);
+
+  // Desktop keyboard shortcuts: Ctrl+Z (Undo) and Ctrl+Y / Ctrl+Shift+Z (Redo)
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [handleUndo, handleRedo]);
 
   // Navigation & filtering
   const [searchQuery, setSearchQuery] = useState('');
@@ -98,13 +320,72 @@ export function App() {
 
   // 3D Controls state: floating 3D labels disabled by default to avoid initial visual clutter
   const [showLabels, setShowLabels] = useState(false);
-  const [sliceAxis, setSliceAxis] = useState<SliceAxis>('none');
-  const [sliceOffset, setSliceOffset] = useState<number>(1.25);
+  const [sliceAxis, setSliceAxis] = useState<SliceAxis>(initialUrlState.slice);
+  const [sliceOffset, setSliceOffset] = useState<number>(
+    initialUrlState.offset
+  );
   const [sliceInvert, setSliceInvert] = useState<boolean>(false);
   const [cameraRequest, setCameraRequest] = useState<{
     preset: CameraPreset;
     timestamp: number;
   } | null>(null);
+
+  // Synchronize main dissection state with URL query string (?part=...&xray=...&slice=...)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams();
+    if (selectedId) params.set('part', selectedId);
+    if (selectedSubMeshId) params.set('sub', selectedSubMeshId);
+    if (xrayIds.size > 0) params.set('xray', Array.from(xrayIds).join(','));
+    if (xraySystems.size > 0)
+      params.set('xsys', Array.from(xraySystems).join(','));
+    if (hiddenIds.size > 0)
+      params.set('hidden', Array.from(hiddenIds).join(','));
+    if (hiddenSystems.size > 0)
+      params.set('hsys', Array.from(hiddenSystems).join(','));
+    if (sliceAxis !== 'none') {
+      params.set('slice', sliceAxis);
+      params.set('offset', sliceOffset.toFixed(2));
+    }
+    if (explodeFactor > 0.01) {
+      params.set('explode', String(Math.round(explodeFactor * 100)));
+    }
+    const qs = params.toString();
+    const newUrl = qs
+      ? `${window.location.pathname}?${qs}`
+      : window.location.pathname;
+    window.history.replaceState(null, '', newUrl);
+  }, [
+    selectedId,
+    selectedSubMeshId,
+    xrayIds,
+    xraySystems,
+    hiddenIds,
+    hiddenSystems,
+    sliceAxis,
+    sliceOffset,
+    explodeFactor,
+  ]);
+
+  const handleShareView = () => {
+    if (typeof window === 'undefined') return;
+    const shareUrl = window.location.href;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2400);
+      });
+    } else {
+      const textArea = document.createElement('textarea');
+      textArea.value = shareUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2400);
+    }
+  };
 
   // External GLB/GLTF imported meshes
   const [importedMeshes, setImportedMeshes] = useState<ImportedMeshItem[]>([]);
@@ -168,26 +449,26 @@ export function App() {
     [hoveredId, importedMeshes]
   );
 
-  // Filtered structures for sidebar tree (also searches sub-mesh names!)
+  // Accent-tolerant & order-independent multi-token search across structures, TA98 codes, and 102 sub-meshes
   const filteredStructures = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const normalizedQuery = normalizeSearchText(searchQuery.trim());
+    const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
+
     return ANATOMICAL_STRUCTURES.filter((s) => {
       const matchesRegion =
         activeRegionFilter === 'all' || s.region === activeRegionFilter;
       if (!matchesRegion) return false;
-      if (!q) return true;
+      if (tokens.length === 0) return true;
+
       const smList = subMeshesByStructure.get(s.id) ?? [];
-      const matchesSubMesh = smList.some(
-        (sm) =>
-          sm.name.toLowerCase().includes(q) ||
-          sm.latinName.toLowerCase().includes(q)
+      const subMeshCorpus = smList
+        .map((sm) => `${sm.name} ${sm.latinName} ${sm.id}`)
+        .join(' ');
+      const fullHaystack = normalizeSearchText(
+        `${s.name} ${s.latinName} ${s.ta98Code} ${s.summary} ${s.id} ${subMeshCorpus}`
       );
-      return (
-        s.name.toLowerCase().includes(q) ||
-        s.latinName.toLowerCase().includes(q) ||
-        s.ta98Code.toLowerCase().includes(q) ||
-        matchesSubMesh
-      );
+
+      return tokens.every((token) => fullHaystack.includes(token));
     });
   }, [searchQuery, activeRegionFilter, subMeshesByStructure]);
 
@@ -297,6 +578,7 @@ export function App() {
     setHiddenSystems(new Set());
     setXraySystems(new Set());
     setSliceAxis('none');
+    setExplodeFactor(0);
     triggerCamera('reset');
   };
 
@@ -585,6 +867,33 @@ export function App() {
             </button>
           </div>
 
+          <div
+            className="action-pill-group undo-redo-pill-group"
+            role="group"
+            aria-label="Histórico de Dissecação"
+          >
+            <button
+              type="button"
+              className="btn-chip"
+              onClick={handleUndo}
+              disabled={!canUndo}
+              title="Desfazer última ação de dissecação (Ctrl+Z)"
+            >
+              <Undo2 size={14} />
+              <span>Desfazer</span>
+            </button>
+            <button
+              type="button"
+              className="btn-chip"
+              onClick={handleRedo}
+              disabled={!canRedo}
+              title="Refazer ação de dissecação (Ctrl+Y)"
+            >
+              <Redo2 size={14} />
+              <span>Refazer</span>
+            </button>
+          </div>
+
           <button
             type="button"
             className={`btn-Action ${showLabels ? 'btn-active' : ''}`}
@@ -603,6 +912,16 @@ export function App() {
           >
             <Award size={15} />
             <span>{quizActive ? 'Sair do Quiz' : 'Modo Quiz'}</span>
+          </button>
+
+          <button
+            type="button"
+            className={`btn-Action ${linkCopied ? 'btn-share-copied' : ''}`}
+            onClick={handleShareView}
+            title="Copiar link direto com o estado atual da dissecação (?part=...&xray=...&slice=...)"
+          >
+            {linkCopied ? <Check size={15} /> : <Share2 size={15} />}
+            <span>{linkCopied ? 'Link copiado!' : 'Compartilhar Visão'}</span>
           </button>
 
           <button
@@ -648,6 +967,29 @@ export function App() {
 
         {/* Ultra-Compact Mobile Header Actions (< 768px) */}
         <div className="mobile-header-actions">
+          <div className="mobile-undo-redo-group">
+            <button
+              type="button"
+              className="mobile-icon-btn"
+              onClick={handleUndo}
+              disabled={!canUndo}
+              title="Desfazer (Undo)"
+              aria-label="Desfazer dissecação"
+            >
+              <Undo2 size={16} />
+            </button>
+            <button
+              type="button"
+              className="mobile-icon-btn"
+              onClick={handleRedo}
+              disabled={!canRedo}
+              title="Refazer (Redo)"
+              aria-label="Refazer dissecação"
+            >
+              <Redo2 size={16} />
+            </button>
+          </div>
+
           <button
             type="button"
             className={`mobile-quiz-btn ${quizActive ? 'btn-quiz-active' : ''}`}
@@ -706,6 +1048,24 @@ export function App() {
                     </select>
                   </div>
                   <div className="mobile-dropdown-divider" />
+                  <button
+                    type="button"
+                    className={`mobile-dropdown-item ${
+                      linkCopied ? 'mobile-dropdown-item-copied' : ''
+                    }`}
+                    onClick={() => {
+                      handleShareView();
+                    }}
+                  >
+                    {linkCopied ? (
+                      <Check size={16} className="text-cyan" />
+                    ) : (
+                      <Share2 size={16} className="text-cyan" />
+                    )}
+                    <span>
+                      {linkCopied ? 'Link copiado!' : 'Compartilhar Visão'}
+                    </span>
+                  </button>
                   <button
                     type="button"
                     className="mobile-dropdown-item"
@@ -1673,6 +2033,7 @@ export function App() {
             sliceAxis={sliceAxis}
             sliceOffset={sliceOffset}
             sliceInvert={sliceInvert}
+            explodeFactor={explodeFactor}
             cameraRequest={cameraRequest}
             importedMeshes={importedMeshes}
             onSelectStructure={handleSelectInViewport}
@@ -1862,6 +2223,43 @@ export function App() {
                   </button>
                 </div>
 
+                {/* 3D Exploded View Slider (0% to 100%) */}
+                <div className="explode-control-box">
+                  <div className="explode-control-header">
+                    <span className="explode-control-label">
+                      <Expand size={13} className="text-cyan" />
+                      Explodir Estrutura / Camadas
+                    </span>
+                    <div className="explode-control-meta">
+                      <span className="explode-percent-badge">
+                        {Math.round(explodeFactor * 100)}%
+                      </span>
+                      {explodeFactor > 0 && (
+                        <button
+                          type="button"
+                          className="explode-reset-btn"
+                          onClick={() => setExplodeFactor(0)}
+                          title="Retornar sub-malhas à posição anatômica original (0%)"
+                        >
+                          0%
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={Math.round(explodeFactor * 100)}
+                    onChange={(e) =>
+                      setExplodeFactor(Number(e.target.value) / 100)
+                    }
+                    className="explode-range-slider"
+                    aria-label="Explodir Estrutura / Camadas (0% a 100%)"
+                  />
+                </div>
+
                 <button
                   type="button"
                   className="mobile-sheet-expand-btn"
@@ -2041,6 +2439,43 @@ export function App() {
                     <EyeOff size={15} />
                     <span>Ocultar</span>
                   </button>
+                </div>
+
+                {/* 3D Exploded View Slider (0% to 100%) */}
+                <div className="explode-control-box">
+                  <div className="explode-control-header">
+                    <span className="explode-control-label">
+                      <Expand size={13} className="text-cyan" />
+                      Explodir Estrutura / Camadas
+                    </span>
+                    <div className="explode-control-meta">
+                      <span className="explode-percent-badge">
+                        {Math.round(explodeFactor * 100)}%
+                      </span>
+                      {explodeFactor > 0 && (
+                        <button
+                          type="button"
+                          className="explode-reset-btn"
+                          onClick={() => setExplodeFactor(0)}
+                          title="Retornar sub-malhas à posição original (0%)"
+                        >
+                          0%
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={Math.round(explodeFactor * 100)}
+                    onChange={(e) =>
+                      setExplodeFactor(Number(e.target.value) / 100)
+                    }
+                    className="explode-range-slider"
+                    aria-label="Explodir Estrutura / Camadas (0% a 100%)"
+                  />
                 </div>
 
                 <button
