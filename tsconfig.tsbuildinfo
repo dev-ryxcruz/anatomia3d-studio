@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/components/viewer3d.tsx","./src/components/viewport3d.tsx","./src/data/anatomycatalog.ts"],"version":"5.6.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/legalsourcesmodal.tsx","./src/components/mobilebottomdock.tsx","./src/components/quizoverlaycard.tsx","./src/components/viewer3d.tsx","./src/components/viewport3d.tsx","./src/data/anatomycatalog.ts","./src/hooks/usedissectionhistory.ts","./src/hooks/usequizandfavorites.ts"],"version":"5.6.3"}

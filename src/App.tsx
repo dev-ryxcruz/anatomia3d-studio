@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import {
@@ -6,7 +6,6 @@ import {
   ANATOMICAL_STRUCTURES,
   ANATOMICAL_SYSTEMS,
   BUILTIN_GLB_MODELS,
-  LEGAL_MODEL_SOURCES,
   RegionId,
   SystemId,
 } from './data/anatomyCatalog';
@@ -18,6 +17,17 @@ import {
   Viewer3D,
   parseGlbFileToMeshes,
 } from './components/Viewer3D';
+import { LegalSourcesModal } from './components/LegalSourcesModal';
+import { QuizOverlayCard } from './components/QuizOverlayCard';
+import { MobileBottomDock } from './components/MobileBottomDock';
+import {
+  DissectionSnapshot,
+  normalizeSearchText,
+  parseInitialUrlParams,
+  useDissectionHistory,
+  useUrlDissectionSync,
+} from './hooks/useDissectionHistory';
+import { useQuizAndFavorites } from './hooks/useQuizAndFavorites';
 import {
   Activity,
   Award,
@@ -25,7 +35,6 @@ import {
   Box,
   Camera,
   Check,
-  CheckCircle2,
   ChevronDown,
   ChevronRight,
   ChevronUp,
@@ -50,81 +59,11 @@ import {
   Search,
   Share2,
   ShieldCheck,
-  Sparkles,
+  Star,
   Tag,
   Undo2,
   X,
-  XCircle,
 } from 'lucide-react';
-
-interface DissectionSnapshot {
-  selectedId: string | null;
-  selectedSubMeshId: string | null;
-  hiddenIds: string[];
-  xrayIds: string[];
-  hiddenSystems: SystemId[];
-  xraySystems: SystemId[];
-}
-
-function normalizeSearchText(text: string): string {
-  return text
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-}
-
-function parseInitialUrlParams() {
-  if (typeof window === 'undefined') {
-    return {
-      part: 'heart' as string | null,
-      sub: null as string | null,
-      xray: [] as string[],
-      xsys: [] as SystemId[],
-      hidden: [] as string[],
-      hsys: [] as SystemId[],
-      slice: 'none' as SliceAxis,
-      offset: 1.25,
-      explode: 0,
-    };
-  }
-  const params = new URLSearchParams(window.location.search);
-  const partParam = params.get('part');
-  const defaultPart = window.innerWidth < 768 ? null : 'heart';
-  const part =
-    partParam === 'none'
-      ? null
-      : partParam && ANATOMICAL_STRUCTURES.some((s) => s.id === partParam)
-      ? partParam
-      : defaultPart;
-
-  const sub = params.get('sub') || null;
-  const xray = (params.get('xray') || '').split(',').filter(Boolean);
-  const xsys = (params.get('xsys') || '')
-    .split(',')
-    .filter((s): s is SystemId =>
-      ANATOMICAL_SYSTEMS.some((sys) => sys.id === s)
-    );
-  const hidden = (params.get('hidden') || '').split(',').filter(Boolean);
-  const hsys = (params.get('hsys') || '')
-    .split(',')
-    .filter((s): s is SystemId =>
-      ANATOMICAL_SYSTEMS.some((sys) => sys.id === s)
-    );
-
-  const rawSlice = params.get('slice');
-  const slice: SliceAxis =
-    rawSlice === 'axial' || rawSlice === 'sagittal' || rawSlice === 'coronal'
-      ? rawSlice
-      : 'none';
-  const rawOffset = parseFloat(params.get('offset') || '');
-  const offset = Number.isFinite(rawOffset) ? rawOffset : 1.25;
-  const rawExplode = parseFloat(params.get('explode') || '');
-  const explode = Number.isFinite(rawExplode)
-    ? Math.max(0, Math.min(1, rawExplode / 100))
-    : 0;
-
-  return { part, sub, xray, xsys, hidden, hsys, slice, offset, explode };
-}
 
 export function App() {
   const initialUrlState = useMemo(() => parseInitialUrlParams(), []);
@@ -169,135 +108,44 @@ export function App() {
   // Share link feedback state
   const [linkCopied, setLinkCopied] = useState(false);
 
-  // Dissection Undo / Redo History Stack
-  const [historyState, setHistoryState] = useState<{
-    stack: DissectionSnapshot[];
-    index: number;
-  }>(() => ({
-    stack: [
-      {
-        selectedId: initialUrlState.part,
-        selectedSubMeshId: initialUrlState.sub,
-        hiddenIds: initialUrlState.hidden,
-        xrayIds: initialUrlState.xray,
-        hiddenSystems: initialUrlState.hsys,
-        xraySystems: initialUrlState.xsys,
-      },
-    ],
-    index: 0,
-  }));
-  const isRestoringHistoryRef = useRef(false);
+  // Persistent Quiz Stats & Favorites (localStorage)
+  const {
+    persistedStats,
+    recordQuizAttempt,
+    resetPersistedQuizStats,
+    favoriteIds,
+    toggleFavorite,
+    onlyFavoritesFilter,
+    setOnlyFavoritesFilter,
+  } = useQuizAndFavorites();
 
-  // Record dissection changes into history stack
-  useEffect(() => {
-    if (isRestoringHistoryRef.current) {
-      isRestoringHistoryRef.current = false;
-      return;
-    }
-    const snapshot: DissectionSnapshot = {
-      selectedId,
-      selectedSubMeshId,
-      hiddenIds: Array.from(hiddenIds).sort(),
-      xrayIds: Array.from(xrayIds).sort(),
-      hiddenSystems: Array.from(hiddenSystems).sort(),
-      xraySystems: Array.from(xraySystems).sort(),
-    };
+  // Dissection Undo / Redo History Hook
+  const handleRestoreSnapshot = useCallback((snap: DissectionSnapshot) => {
+    setSelectedId(snap.selectedId);
+    setSelectedSubMeshId(snap.selectedSubMeshId);
+    setHiddenIds(new Set(snap.hiddenIds));
+    setXrayIds(new Set(snap.xrayIds));
+    setHiddenSystems(new Set(snap.hiddenSystems));
+    setXraySystems(new Set(snap.xraySystems));
+  }, []);
 
-    setHistoryState((prev) => {
-      const current = prev.stack[prev.index];
-      if (
-        current &&
-        current.selectedId === snapshot.selectedId &&
-        current.selectedSubMeshId === snapshot.selectedSubMeshId &&
-        current.hiddenIds.join(',') === snapshot.hiddenIds.join(',') &&
-        current.xrayIds.join(',') === snapshot.xrayIds.join(',') &&
-        current.hiddenSystems.join(',') === snapshot.hiddenSystems.join(',') &&
-        current.xraySystems.join(',') === snapshot.xraySystems.join(',')
-      ) {
-        return prev;
-      }
-      const nextStack = prev.stack.slice(0, prev.index + 1);
-      nextStack.push(snapshot);
-      if (nextStack.length > 50) {
-        nextStack.shift();
-      }
-      return {
-        stack: nextStack,
-        index: nextStack.length - 1,
-      };
-    });
-  }, [
+  const { canUndo, canRedo, handleUndo, handleRedo } = useDissectionHistory({
+    initialSnapshot: {
+      selectedId: initialUrlState.part,
+      selectedSubMeshId: initialUrlState.sub,
+      hiddenIds: initialUrlState.hidden,
+      xrayIds: initialUrlState.xray,
+      hiddenSystems: initialUrlState.hsys,
+      xraySystems: initialUrlState.xsys,
+    },
     selectedId,
     selectedSubMeshId,
     hiddenIds,
     xrayIds,
     hiddenSystems,
     xraySystems,
-  ]);
-
-  const canUndo = historyState.index > 0;
-  const canRedo = historyState.index < historyState.stack.length - 1;
-
-  const handleUndo = useCallback(() => {
-    setHistoryState((prev) => {
-      if (prev.index <= 0) return prev;
-      const targetIdx = prev.index - 1;
-      const snap = prev.stack[targetIdx];
-      isRestoringHistoryRef.current = true;
-      setSelectedId(snap.selectedId);
-      setSelectedSubMeshId(snap.selectedSubMeshId);
-      setHiddenIds(new Set(snap.hiddenIds));
-      setXrayIds(new Set(snap.xrayIds));
-      setHiddenSystems(new Set(snap.hiddenSystems));
-      setXraySystems(new Set(snap.xraySystems));
-      return { ...prev, index: targetIdx };
-    });
-  }, []);
-
-  const handleRedo = useCallback(() => {
-    setHistoryState((prev) => {
-      if (prev.index >= prev.stack.length - 1) return prev;
-      const targetIdx = prev.index + 1;
-      const snap = prev.stack[targetIdx];
-      isRestoringHistoryRef.current = true;
-      setSelectedId(snap.selectedId);
-      setSelectedSubMeshId(snap.selectedSubMeshId);
-      setHiddenIds(new Set(snap.hiddenIds));
-      setXrayIds(new Set(snap.xrayIds));
-      setHiddenSystems(new Set(snap.hiddenSystems));
-      setXraySystems(new Set(snap.xraySystems));
-      return { ...prev, index: targetIdx };
-    });
-  }, []);
-
-  // Desktop keyboard shortcuts: Ctrl+Z (Undo) and Ctrl+Y / Ctrl+Shift+Z (Redo)
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable)
-      ) {
-        return;
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-        e.preventDefault();
-        if (e.shiftKey) {
-          handleRedo();
-        } else {
-          handleUndo();
-        }
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
-        e.preventDefault();
-        handleRedo();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [handleUndo, handleRedo]);
+    onRestoreSnapshot: handleRestoreSnapshot,
+  });
 
   // Navigation & filtering
   const [searchQuery, setSearchQuery] = useState('');
@@ -331,31 +179,7 @@ export function App() {
   } | null>(null);
 
   // Synchronize main dissection state with URL query string (?part=...&xray=...&slice=...)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams();
-    if (selectedId) params.set('part', selectedId);
-    if (selectedSubMeshId) params.set('sub', selectedSubMeshId);
-    if (xrayIds.size > 0) params.set('xray', Array.from(xrayIds).join(','));
-    if (xraySystems.size > 0)
-      params.set('xsys', Array.from(xraySystems).join(','));
-    if (hiddenIds.size > 0)
-      params.set('hidden', Array.from(hiddenIds).join(','));
-    if (hiddenSystems.size > 0)
-      params.set('hsys', Array.from(hiddenSystems).join(','));
-    if (sliceAxis !== 'none') {
-      params.set('slice', sliceAxis);
-      params.set('offset', sliceOffset.toFixed(2));
-    }
-    if (explodeFactor > 0.01) {
-      params.set('explode', String(Math.round(explodeFactor * 100)));
-    }
-    const qs = params.toString();
-    const newUrl = qs
-      ? `${window.location.pathname}?${qs}`
-      : window.location.pathname;
-    window.history.replaceState(null, '', newUrl);
-  }, [
+  useUrlDissectionSync({
     selectedId,
     selectedSubMeshId,
     xrayIds,
@@ -365,7 +189,7 @@ export function App() {
     sliceAxis,
     sliceOffset,
     explodeFactor,
-  ]);
+  });
 
   const handleShareView = () => {
     if (typeof window === 'undefined') return;
@@ -455,6 +279,7 @@ export function App() {
     const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
 
     return ANATOMICAL_STRUCTURES.filter((s) => {
+      if (onlyFavoritesFilter && !favoriteIds.has(s.id)) return false;
       const matchesRegion =
         activeRegionFilter === 'all' || s.region === activeRegionFilter;
       if (!matchesRegion) return false;
@@ -470,7 +295,13 @@ export function App() {
 
       return tokens.every((token) => fullHaystack.includes(token));
     });
-  }, [searchQuery, activeRegionFilter, subMeshesByStructure]);
+  }, [
+    searchQuery,
+    activeRegionFilter,
+    subMeshesByStructure,
+    onlyFavoritesFilter,
+    favoriteIds,
+  ]);
 
   const triggerCamera = (preset: CameraPreset) => {
     setCameraRequest({ preset, timestamp: Date.now() });
@@ -579,6 +410,7 @@ export function App() {
     setXraySystems(new Set());
     setSliceAxis('none');
     setExplodeFactor(0);
+    setOnlyFavoritesFilter(false);
     triggerCamera('reset');
   };
 
@@ -636,11 +468,19 @@ export function App() {
     if (!clickedStructure || !targetStructure) return;
 
     if (structureId === quizTargetId) {
-      setQuizScore((prev) => ({
-        correct: prev.correct + 1,
-        total: prev.total + 1,
-        streak: prev.streak + 1,
-      }));
+      const nextCorrect = quizScore.correct + 1;
+      const nextStreak = quizScore.streak + 1;
+      setQuizScore({
+        correct: nextCorrect,
+        total: quizScore.total + 1,
+        streak: nextStreak,
+      });
+      recordQuizAttempt(
+        targetStructure.system,
+        true,
+        nextCorrect,
+        nextStreak
+      );
       setQuizFeedback({
         status: 'correct',
         message: `Correto! Você identificou: ${targetStructure.name} (${targetStructure.latinName}).`,
@@ -654,6 +494,7 @@ export function App() {
         total: prev.total + 1,
         streak: 0,
       }));
+      recordQuizAttempt(targetStructure.system, false, quizScore.correct, 0);
       setQuizFeedback({
         status: 'wrong',
         message: `Você clicou em "${clickedStructure.name}". Procure por: ${targetStructure.name} (${targetStructure.latinName}).`,
@@ -1252,7 +1093,7 @@ export function App() {
               </div>
             </div>
 
-            {/* Quick Dissection Presets */}
+            {/* Quick Dissection Presets & Favorites Filter */}
             <div className="preset-bar">
               <button
                 type="button"
@@ -1277,6 +1118,16 @@ export function App() {
                 title="Deixar esqueleto e músculos translúcidos para visualizar órgãos internos"
               >
                 <Ghost size={13} /> Raio-X Visceral
+              </button>
+              <button
+                type="button"
+                className={`preset-chip ${
+                  onlyFavoritesFilter ? 'preset-chip-fav-active' : ''
+                }`}
+                onClick={() => setOnlyFavoritesFilter((v) => !v)}
+                title="Filtrar apenas estruturas marcadas como favoritas (salvas no dispositivo)"
+              >
+                <Star size={13} /> Favoritos ({favoriteIds.size})
               </button>
             </div>
           </div>
@@ -1942,53 +1793,16 @@ export function App() {
 
         {/* CENTER 3D VIEWPORT */}
         <main className="viewport-area">
-          {/* Quiz Banner Overlay */}
-          {quizActive && quizTargetStructure && (
-            <div className="quiz-overlay-card">
-              <div className="quiz-header-row">
-                <span className="quiz-badge">
-                  <Sparkles size={14} /> MODO QUIZ ANATÔMICO (.GLB REAL)
-                </span>
-                <div className="quiz-stats">
-                  <span>
-                    Acertos: <strong>{quizScore.correct}</strong>/
-                    {quizScore.total}
-                  </span>
-                  <span>
-                    Sequência: <strong>{quizScore.streak}🔥</strong>
-                  </span>
-                  <button
-                    type="button"
-                    className="quiz-skip-btn"
-                    onClick={() => pickNextQuizQuestion(quizTargetId)}
-                  >
-                    Pular
-                  </button>
-                </div>
-              </div>
-              <div className="quiz-prompt">
-                Clique no modelo 3D sobre a estrutura:{' '}
-                <strong>{quizTargetStructure.name}</strong>{' '}
-                <em>({quizTargetStructure.latinName})</em>
-              </div>
-              {quizFeedback.status && (
-                <div
-                  className={`quiz-feedback ${
-                    quizFeedback.status === 'correct'
-                      ? 'quiz-feedback-ok'
-                      : 'quiz-feedback-err'
-                  }`}
-                >
-                  {quizFeedback.status === 'correct' ? (
-                    <CheckCircle2 size={16} />
-                  ) : (
-                    <XCircle size={16} />
-                  )}
-                  <span>{quizFeedback.message}</span>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Quiz Banner Overlay with Persisted Student Mastery Stats */}
+          <QuizOverlayCard
+            quizActive={quizActive}
+            quizTargetStructure={quizTargetStructure}
+            quizScore={quizScore}
+            quizFeedback={quizFeedback}
+            persistedStats={persistedStats}
+            onSkipQuestion={() => pickNextQuizQuestion(quizTargetId)}
+            onResetPersistedStats={resetPersistedQuizStats}
+          />
 
           {/* Import error toast */}
           {importError && (
@@ -2134,6 +1948,23 @@ export function App() {
                   <span className="ta98-pill">
                     TA98: {selectedStructure.ta98Code}
                   </span>
+                  <button
+                    type="button"
+                    className={`favorite-toggle-btn ${
+                      favoriteIds.has(selectedStructure.id)
+                        ? 'favorite-toggle-btn-active'
+                        : ''
+                    }`}
+                    onClick={() => toggleFavorite(selectedStructure.id)}
+                    title={
+                      favoriteIds.has(selectedStructure.id)
+                        ? 'Remover dos favoritos'
+                        : 'Salvar estrutura nos favoritos (localStorage)'
+                    }
+                    aria-label="Alternar favorito"
+                  >
+                    <Star size={14} />
+                  </button>
                   <button
                     type="button"
                     className="info-close-btn"
@@ -2555,262 +2386,35 @@ export function App() {
       </div>
 
       {/* ==================== UNIFIED MOBILE BOTTOM DOCK (< 768px) ==================== */}
-      <nav className="mobile-bottom-dock" aria-label="Controles 3D Mobile">
-        {/* Popover: Plano de Corte */}
-        {mobileDockPopover === 'slice' && (
-          <div className="mobile-dock-popover" role="dialog" aria-label="Plano de Corte">
-            <div className="mobile-popover-header">
-              <span>
-                <Scissors size={14} className="text-cyan" /> Plano de Corte Anatômico
-              </span>
-              <button
-                type="button"
-                className="icon-btn-sm"
-                onClick={() => setMobileDockPopover(null)}
-              >
-                <X size={15} />
-              </button>
-            </div>
-            <div className="mobile-popover-pills">
-              {(
-                [
-                  { id: 'none', label: 'Desativado' },
-                  { id: 'axial', label: 'Axial' },
-                  { id: 'sagittal', label: 'Sagital' },
-                  { id: 'coronal', label: 'Coronal' },
-                ] as { id: SliceAxis; label: string }[]
-              ).map((ax) => (
-                <button
-                  key={ax.id}
-                  type="button"
-                  className={`btn-chip ${
-                    sliceAxis === ax.id ? 'btn-chip-active' : ''
-                  }`}
-                  onClick={() => handleAxisChange(ax.id)}
-                >
-                  {ax.label}
-                </button>
-              ))}
-            </div>
-            {sliceAxis !== 'none' && (
-              <div className="mobile-popover-slider-row">
-                <input
-                  type="range"
-                  min={sliceAxis === 'axial' ? -1.55 : -0.85}
-                  max={sliceAxis === 'axial' ? 2.6 : 0.85}
-                  step={0.02}
-                  value={sliceOffset}
-                  onChange={(e) => setSliceOffset(parseFloat(e.target.value))}
-                  aria-label="Posição do plano de corte"
-                />
-                <button
-                  type="button"
-                  className="btn-chip"
-                  onClick={() => setSliceInvert((v) => !v)}
-                >
-                  Inverter
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Popover: Vistas Rápidas */}
-        {mobileDockPopover === 'views' && (
-          <div className="mobile-dock-popover" role="dialog" aria-label="Vistas da Câmera">
-            <div className="mobile-popover-header">
-              <span>
-                <Compass size={14} className="text-cyan" /> Vistas Anatômicas
-              </span>
-              <button
-                type="button"
-                className="icon-btn-sm"
-                onClick={() => setMobileDockPopover(null)}
-              >
-                <X size={15} />
-              </button>
-            </div>
-            <div className="mobile-popover-pills">
-              <button
-                type="button"
-                className="btn-chip"
-                onClick={() => {
-                  triggerCamera('anterior');
-                  setMobileDockPopover(null);
-                }}
-              >
-                Anterior
-              </button>
-              <button
-                type="button"
-                className="btn-chip"
-                onClick={() => {
-                  triggerCamera('posterior');
-                  setMobileDockPopover(null);
-                }}
-              >
-                Posterior
-              </button>
-              <button
-                type="button"
-                className="btn-chip"
-                onClick={() => {
-                  triggerCamera('right');
-                  setMobileDockPopover(null);
-                }}
-              >
-                Lateral
-              </button>
-              <button
-                type="button"
-                className="btn-chip"
-                onClick={() => {
-                  triggerCamera('superior');
-                  setMobileDockPopover(null);
-                }}
-              >
-                Superior
-              </button>
-              <button
-                type="button"
-                className="btn-chip"
-                onClick={() => {
-                  triggerCamera('reset');
-                  setMobileDockPopover(null);
-                }}
-              >
-                Resetar
-              </button>
-            </div>
-          </div>
-        )}
-
-        <button
-          type="button"
-          className={`mobile-dock-btn ${
-            sidebarOpenMobile ? 'mobile-dock-btn-active' : ''
-          }`}
-          onClick={() => {
-            setMobileDockPopover(null);
-            setMobileToolsOpen(false);
-            setSidebarOpenMobile((v) => !v);
-          }}
-        >
-          <Search size={18} />
-          <span>Sistemas/Busca</span>
-        </button>
-
-        <button
-          type="button"
-          className={`mobile-dock-btn ${
-            mobileDockPopover === 'slice' || sliceAxis !== 'none'
-              ? 'mobile-dock-btn-active'
-              : ''
-          }`}
-          onClick={() => {
-            setSidebarOpenMobile(false);
-            setMobileToolsOpen(false);
-            setMobileDockPopover((v) => (v === 'slice' ? null : 'slice'));
-          }}
-        >
-          <Scissors size={18} />
-          <span>Plano de Corte</span>
-        </button>
-
-        <button
-          type="button"
-          className={`mobile-dock-btn ${
-            mobileDockPopover === 'views' ? 'mobile-dock-btn-active' : ''
-          }`}
-          onClick={() => {
-            setSidebarOpenMobile(false);
-            setMobileToolsOpen(false);
-            setMobileDockPopover((v) => (v === 'views' ? null : 'views'));
-          }}
-        >
-          <Compass size={18} />
-          <span>Vistas</span>
-        </button>
-
-        <button
-          type="button"
-          className={`mobile-dock-btn ${
-            showLabels ? 'mobile-dock-btn-active' : ''
-          }`}
-          onClick={() => {
-            setMobileDockPopover(null);
-            setShowLabels((v) => !v);
-          }}
-        >
-          <Tag size={18} />
-          <span>Etiquetas 3D</span>
-        </button>
-      </nav>
+      <MobileBottomDock
+        sidebarOpenMobile={sidebarOpenMobile}
+        mobileDockPopover={mobileDockPopover}
+        sliceAxis={sliceAxis}
+        sliceOffset={sliceOffset}
+        showLabels={showLabels}
+        onToggleSidebarMobile={() => {
+          setMobileDockPopover(null);
+          setMobileToolsOpen(false);
+          setSidebarOpenMobile((v) => !v);
+        }}
+        onSetMobileDockPopover={setMobileDockPopover}
+        onCloseSidebarAndTools={() => {
+          setSidebarOpenMobile(false);
+          setMobileToolsOpen(false);
+        }}
+        onAxisChange={handleAxisChange}
+        onSliceOffsetChange={setSliceOffset}
+        onToggleSliceInvert={() => setSliceInvert((v) => !v)}
+        onTriggerCamera={triggerCamera}
+        onToggleShowLabels={() => setShowLabels((v) => !v)}
+      />
 
       {/* ==================== MODAL: LEGAL SOURCES & LICENSES ==================== */}
-      {showLegalModal && (
-        <div
-          className="modal-backdrop"
-          onClick={() => setShowLegalModal(false)}
-        >
-          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="modal-title-group">
-                <ShieldCheck size={20} className="text-cyan" />
-                <h2>Fontes de Modelos 3D (.GLB), Licenças e Conformidade</h2>
-              </div>
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => setShowLegalModal(false)}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="modal-body">
-              <p className="modal-intro">
-                O <strong>Anatomia3D Studio</strong> utiliza malhas anatômicas
-                3D reais (`.glb`) provenientes de bases científicas abertas (
-                <em>BodyParts3D / DBCLS</em>, <em>NIH 3D</em> e repositórios
-                públicos sob licença Creative Commons / MIT) armazenadas em{' '}
-                <code>public/models/</code>.
-              </p>
-
-              <div className="sources-grid">
-                {LEGAL_MODEL_SOURCES.map((src) => (
-                  <div key={src.id} className="source-card">
-                    <div className="source-card-top">
-                      <h3>{src.title}</h3>
-                      <span className="license-badge">{src.license}</span>
-                    </div>
-                    <p className="source-org">{src.organization}</p>
-                    <p className="source-usage">{src.usageInApp}</p>
-                    <div className="source-links">
-                      {src.sourceUrl.startsWith('http') && (
-                        <a
-                          href={src.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Acessar Repositório Oficial ↗
-                        </a>
-                      )}
-                      <a
-                        href={src.licenseUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Texto da Licença ↗
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <LegalSourcesModal
+        open={showLegalModal}
+        onClose={() => setShowLegalModal(false)}
+      />
     </div>
   );
 }
+

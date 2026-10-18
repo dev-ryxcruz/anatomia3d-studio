@@ -1,0 +1,21 @@
+{
+  "name": "Anatomia3D Studio — Atlas Anatômico Interativo",
+  "short_name": "Anatomia3D",
+  "description": "Atlas Anatômico 3D Interativo WebGL 2 com malhas reais .GLB (BodyParts3D), dissecação multicamadas, vista explodida e nomenclatura internacional TA98.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#080d16",
+  "theme_color": "#080d16",
+  "categories": ["education", "medical", "productivity"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
